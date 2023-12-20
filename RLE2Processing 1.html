@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body {
+                margin: 0px;
+            }
+            div {
+                width: 100vw;
+                height: 50vh;
+            }
+            textarea {
+                margin: 10px;
+                border: 1px solid grey;
+                border-radius: 2px;
+                padding: 3px;
+                width: calc(100vw - 28px);
+                height: calc(50vh - 28px);
+                resize: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div>
+            <textarea id="Eingabe" oninput="aktualisieren();" placeholder="RLE hier einfügen..."></textarea>
+        </div>
+        <div>
+            <textarea id="Ausgabe" readonly>
+            </textarea>
+        </div>
+        <script>
+            function aktualisieren() {
+                document.getElementById('Ausgabe').value = 'RLE konnte nicht gelesen werden';
+                let RLE = document.getElementById('Eingabe').value;
+                if (RLE == "") {
+                    document.getElementById('Ausgabe').value = "";
+                    return;
+                }
+                document.getElementById('Ausgabe').value = Code_erstellen(RLE_laden(RLE));
+            };
+            function RLE_laden(RLE) {
+                let lines1 = RLE.split(`\n`);
+                let lines2 = [];
+                for (let i = 0; i < lines1.length; i++) {
+                    if (lines1[i][0] != `#`) lines2.push(lines1[i]);
+                }
+                let line1 = lines2[0].split(`, `);
+                let variables = {};
+                for (let i = 0; i < line1.length; i++) {
+                    let name = line1[i].slice(0, line1[i].indexOf(` `));
+                    let value = line1[i].slice(name.length+3, line1[i].length);
+                    variables[name] = value;
+                }
+                if (variables.rule.toLowerCase() != `b3/s23`) throw "Rule must be b3/s23";
+                let breite = variables.x*1;
+                let höhe = variables.y*1;
+                let daten = new Array(breite).fill(0);
+                daten = new Array(höhe).fill(daten);
+                daten = JSON.parse(JSON.stringify(daten));
+                let line2 = lines2.slice(1, lines2.length).join("");
+                let i = 0;
+                let position = 0;
+                let number = 0;
+                let numberlength = 0;
+                for (let j = 0; j < line2.length; j++) {
+                    if (line2[j] == "!") break;
+                    if ("0123456789".indexOf(line2[j]) != -1) {
+                        number *= 10;
+                        number += line2[j]*1;
+                        numberlength++;
+                    } else {
+                        if (numberlength == 0) number = 1;
+                        if (line2[j] == "o") {
+                            daten[i].fill(1, position, position+number);
+                        } else if (line2[j] == "$") {
+                            i += number;
+                            position = 0;
+                            number = 0;
+                            numberlength = 0;
+                            continue;
+                        }
+                        position += number;
+                        number = 0;
+                        numberlength = 0;
+                    }
+                }
+                return daten;
+            };
+            function Code_erstellen(daten) {
+                let ergebnis = "{";
+                for (let i = 0; i < daten.length; i++) {
+                    if (i != 0) ergebnis += "},";
+                    ergebnis += "\n  {";
+                    ergebnis += daten[i].join(",");
+                }
+                ergebnis += "}\n}";
+                return ergebnis;
+            };
+            document.getElementById('Eingabe').value = "";
+            aktualisieren();
+        </script>
+    </body>
+</html>
