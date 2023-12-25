@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <input type="file" id="file" onchange="drawAll();">
+        </input>
+        <br>
+        <canvas id="canvas" width="400" height="400">
+        </canvas>
+        <canvas id="canvas_tmp" width="400" height="400" style="display: none;">
+        </canvas>
+        <div id="images" style="display: none;">
+        </div>
+        <script>
+            let canvas = document.getElementById("canvas");
+            let ctx = canvas.getContext("2d");
+            let canvas_tmp = document.getElementById("canvas_tmp");
+            let ctx_tmp = canvas_tmp.getContext("2d");
+            let file = document.getElementById("file");
+            let images = document.getElementById("images");
+            function waitForElm(selector) {
+                return new Promise(resolve => {
+                    if (document.querySelector(selector)) {
+                        return resolve(document.querySelector(selector));
+                    }
+                    const observer = new MutationObserver(mutations => {
+                        if (document.querySelector(selector)) {
+                            observer.disconnect();
+                            resolve(document.querySelector(selector));
+                        }
+                    });
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: true
+                    });
+                });
+            }
+            async function loadImage(src) {
+                let image = document.createElement("img");
+                image.setAttribute("src", src);
+                let id = "id"+images.children.length.toString();
+                image.setAttribute("id", id);
+                images.appendChild(image);
+                return await waitForElm("#"+id);
+            }
+            function bildMalen(imgCenter, imgLeft, imgRight, rot, X, Y, pfeil, text, zahlen) {
+                ctx_tmp.clearRect(0, 0, s, s);
+                function drawImg(img, posX, posY, r) {
+                    let w = img.width;
+                    let h = img.height;
+                    let s2 = Math.min(w, h);
+                    let x = (img.width-s2)/2;
+                    let y = (img.height-s2)/2;
+                    ctx_tmp.save();
+                    ctx_tmp.translate(1, 1);
+                    ctx_tmp.translate(s/4*posX, s/4*posY);
+                    ctx_tmp.scale(2**(-1.5), 2**(-1.5));
+                    ctx_tmp.rotate(Math.PI/2*r-Math.PI/4);
+                    ctx_tmp.translate(-s/2, -s/2);
+                    ctx_tmp.drawImage(img, x, y, s2, s2, 0, 0, s, s);
+                    ctx_tmp.restore();
+                };
+                drawImg(imgRight,  1, 1, rot.r);
+                drawImg(imgLeft,   3, 3, rot.l);
+                drawImg(imgCenter, 0, 2, rot.c);
+                drawImg(imgCenter, 4, 2, rot.c);
+                ctx_tmp.clearRect(0, 0-border, s/2, s/4);
+                ctx_tmp.clearRect(s/4+border, 0, s/4, s/4*3);
+                ctx_tmp.clearRect(0, s/2+border, s/2, s/4);
+                ctx_tmp.clearRect(s/2, s/4*3+border, s/2, s/4);
+                ctx_tmp.clearRect(s/2-border, s/4, s/4, s/4*3);
+                ctx_tmp.clearRect(s/2, s/4-border, s/2, s/4);
+                ctx_tmp.textAlign = "center";
+                ctx_tmp.textBaseline = "middle";
+                ctx_tmp.fillStyle = "#555";
+                ctx_tmp.beginPath();
+                ctx_tmp.font = "bold "+s/20+"px sans-serif";
+                ctx_tmp.fillText(zahlen[0], s/16*13, s/8*7);
+                ctx_tmp.fillText(zahlen[1], s/16*3, s/8);
+                ctx_tmp.fillText(zahlen[2], s/8*5, s/16*5);
+                ctx_tmp.fillText(zahlen[3], s/8*3, s/16*11);
+                ctx_tmp.closePath();
+                ctx_tmp.fillStyle = "black";
+                ctx_tmp.beginPath();
+                ctx_tmp.strokeRect(1, 1, s-1, s-1);
+                ctx_tmp.closePath();
+                ctx_tmp.beginPath();/*
+                ctx_tmp.font = "bold "+s/3+"px sans-serif";
+                ctx_tmp.strokeText(pfeil, s/2, s/2);
+                ctx_tmp.font = s/20+"px sans-serif";
+                ctx_tmp.fillText(text, s/2, s/2);*/
+                ctx_tmp.closePath();
+                let data = ctx_tmp.getImageData(0, 0, s, s);
+                ctx.putImageData(data, X*s, Y*s);
+            };
+            let s = 500;
+            canvas.width = s*2;
+            canvas.height = s*3;
+            canvas_tmp.width = s;
+            canvas_tmp.height = s;
+            let border = s/50;
+            async function drawAll() {
+                if (file.files.length == 0) return;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let reader = new FileReader();
+                let promise = new Promise((f) => {reader.onload = f;return;});
+                reader.readAsDataURL(file.files[0]);
+                await promise;
+                let img = await loadImage(reader.result);
+                await new Promise((f) => {setTimeout(f, 0);});
+                bildMalen(img, img, img, {c: 0, l: 1, r: 1}, 0, 0, "↗", "Vorderseite", ["J", "I", "L", "K"]);
+                bildMalen(img, img, img, {c: 0, l: 1, r: 1}, 1, 0, "↘", "Rechte Seite", ["G", "B", "C", "I"]);
+                bildMalen(img, img, img, {c: 0, l: 3, r: 3}, 0, 1, "↙", "Hinterseite", ["E", "C", "D", "H"]);
+                bildMalen(img, img, img, {c: 0, l: 3, r: 3}, 1, 1, "↘", "Linke Seite", ["F", "A", "J", "E"]);
+                bildMalen(img, img, img, {c: 0, l: 3, r: 3}, 0, 2, "↖", "Oberseite", ["H", "L", "G", "F"]);
+                bildMalen(img, img, img, {c: 0, l: 1, r: 1}, 1, 2, "↖", "Unterseite", ["D", "K", "A", "B"]);
+            };
+            drawAll();
+        </script>
+    </body>
+</html>
