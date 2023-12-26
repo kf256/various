@@ -4,7 +4,7 @@
         <meta charset="utf-8">
     </head>
     <body>
-        <input type="file" id="file" onchange="drawAll();">
+        <input type="file" id="file" onchange="drawAll();" multiple>
         </input>
         <br>
         <canvas id="canvas" width="400" height="400">
@@ -45,7 +45,7 @@
                 images.appendChild(image);
                 return await waitForElm("#"+id);
             }
-            function bildMalen(imgCenter, imgLeft, imgRight, rot, X, Y, pfeil, text, zahlen) {
+            function bildMalen(imgLeft, imgCenter, imgRight, rot, X, Y, pfeil, text, zahlen) {
                 ctx_tmp.clearRect(0, 0, s, s);
                 function drawImg(img, posX, posY, r) {
                     let w = img.width;
@@ -102,20 +102,39 @@
             canvas_tmp.height = s;
             let border = s/50;
             async function drawAll() {
-                if (file.files.length == 0) return;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                let reader = new FileReader();
-                let promise = new Promise((f) => {reader.onload = f;return;});
-                reader.readAsDataURL(file.files[0]);
-                await promise;
-                let img = await loadImage(reader.result);
-                await new Promise((f) => {setTimeout(f, 0);});
-                bildMalen(img, img, img, {c: 0, l: 1, r: 1}, 0, 0, "↗", "Vorderseite", ["J", "I", "L", "K"]);
-                bildMalen(img, img, img, {c: 0, l: 1, r: 1}, 1, 0, "↘", "Rechte Seite", ["G", "B", "C", "I"]);
-                bildMalen(img, img, img, {c: 0, l: 3, r: 3}, 0, 1, "↙", "Hinterseite", ["E", "C", "D", "H"]);
-                bildMalen(img, img, img, {c: 0, l: 3, r: 3}, 1, 1, "↘", "Linke Seite", ["F", "A", "J", "E"]);
-                bildMalen(img, img, img, {c: 0, l: 3, r: 3}, 0, 2, "↖", "Oberseite", ["H", "L", "G", "F"]);
-                bildMalen(img, img, img, {c: 0, l: 1, r: 1}, 1, 2, "↖", "Unterseite", ["D", "K", "A", "B"]);
+                if (file.files.length == 1) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    let reader = new FileReader();
+                    let promise = new Promise((f) => {reader.onload = f;return;});
+                    reader.readAsDataURL(file.files[0]);
+                    await promise;
+                    let img = await loadImage(reader.result);
+                    await new Promise((f) => {setTimeout(f, 0);});
+                    bildMalen(img, img, img, {c: 0, l: 1, r: 1}, 0, 0, "↗", "Vorderseite", ["J", "I", "L", "K"]);
+                    bildMalen(img, img, img, {c: 0, l: 1, r: 1}, 1, 0, "↘", "Rechte Seite", ["G", "B", "C", "I"]);
+                    bildMalen(img, img, img, {c: 0, l: 3, r: 3}, 0, 1, "↙", "Hinterseite", ["E", "C", "D", "H"]);
+                    bildMalen(img, img, img, {c: 0, l: 3, r: 3}, 1, 1, "↘", "Linke Seite", ["F", "A", "J", "E"]);
+                    bildMalen(img, img, img, {c: 0, l: 3, r: 3}, 0, 2, "↖", "Oberseite", ["H", "L", "G", "F"]);
+                    bildMalen(img, img, img, {c: 0, l: 1, r: 1}, 1, 2, "↖", "Unterseite", ["D", "K", "A", "B"]);
+                }
+                if (file.files.length == 6) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    let imgs = [];
+                    for (let i = 0; i < 6; i++) {
+                        let reader = new FileReader();
+                        let promise = new Promise((f) => {reader.onload = f;return;});
+                        reader.readAsDataURL(file.files[5-i]);
+                        await promise;
+                        imgs[i] = await loadImage(reader.result);
+                        await new Promise((f) => {setTimeout(f, 0);});
+                    }
+                    bildMalen(imgs[3], imgs[0], imgs[1], {c: 0, l: 1, r: 1}, 0, 0, "↗", "Vorderseite", ["J", "I", "L", "K"]);
+                    bildMalen(imgs[4], imgs[1], imgs[5], {c: 0, l: 1, r: 1}, 1, 0, "↘", "Rechte Seite", ["G", "B", "C", "I"]);
+                    bildMalen(imgs[3], imgs[2], imgs[1], {c: 0, l: 3, r: 3}, 0, 1, "↙", "Hinterseite", ["E", "C", "D", "H"]);
+                    bildMalen(imgs[4], imgs[3], imgs[5], {c: 0, l: 3, r: 3}, 1, 1, "↘", "Linke Seite", ["F", "A", "J", "E"]);
+                    bildMalen(imgs[2], imgs[4], imgs[0], {c: 0, l: 3, r: 3}, 0, 2, "↖", "Oberseite", ["H", "L", "G", "F"]);
+                    bildMalen(imgs[2], imgs[5], imgs[0], {c: 0, l: 1, r: 1}, 1, 2, "↖", "Unterseite", ["D", "K", "A", "B"]);
+                }
             };
             drawAll();
         </script>
