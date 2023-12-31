@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body {
+                margin: 0px;
+            }
+            #canvas {
+                position: absolute;
+                top: 0px;
+                left: 0px;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="canvas">
+        </canvas>
+        <script>
+            let canvas = document.getElementById("canvas");
+            let ctx = canvas.getContext("2d");
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            let gravitation = 100;
+            class Color {
+                constructor() {
+                    if (arguments.length == 3) {
+                        this.r = arguments[0];
+                        this.g = arguments[1];
+                        this.b = arguments[2];
+                    } else if (arguments.length == 0) {
+                        function hsv2rgb(h,s,v) {
+                            let f = (n, k = (n+h/60)%6) => v - v*s*Math.max(Math.min(k, 4-k, 1), 0);
+                            return [f(5), f(3), f(1)];
+                        };
+                        let result = hsv2rgb(Math.random()*360, 1, 1);
+                        this.r = result[0];
+                        this.g = result[1];
+                        this.b = result[2];
+                    }
+                }
+                get R256() {
+                    return Math.floor(this.r*256);
+                }
+                get G256() {
+                    return Math.floor(this.g*256);
+                }
+                get B256() {
+                    return Math.floor(this.b*256);
+                }
+                get RGB256array() {
+                    return [this.R256, this.G256, this.B256];
+                }
+                get fillStyle() {
+                    return `RGB(${this.RGB256array.join(", ")})`;
+                }
+                get copy() {
+                    return new Color(this.r, this.g, this.b);
+                }
+                multiplyRGB(factor) {
+                    this.r *= factor;
+                    this.g *= factor;
+                    this.b *= factor;
+                    return this;
+                }
+            }
+            class Vector {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                }
+                scale(factor) {
+                    this.x *= factor;
+                    this.y *= factor;
+                    return this;
+                }
+                get length() {
+                    return Math.hypot(this.x, this.y);
+                }
+                get array() {
+                    return [this.x, this.y];
+                }
+                plus(anotherVector) {
+                    this.x += anotherVector.x;
+                    this.y += anotherVector.y;
+                    return this;
+                }
+                minus(anotherVector) {
+                    this.x -= anotherVector.x;
+                    this.y -= anotherVector.y;
+                    return this;
+                }
+                copy() {
+                    return new Vector(this.x, this.y);
+                }
+            }
+            class Dot {
+                constructor(pos, speed) {
+                    this.pos = pos;
+                    this.speed = speed;
+                    this.lastUpdate = Date.now();
+                    this.time = 1;
+                    this.updating = false;
+                    this.crossSectionalArea = 4;
+                    this.dragCoefficient = 0.2;
+                    this.weight = 10;
+                    this.lineLength = 20;
+                    this.lastPositions = [{pos: this.pos.copy(), time: this.time}];
+                    this.color = new Color(1, 1, 1);
+                    this.radius = 2;
+                }
+                update() {
+                    this.updating = true;
+                    let timeDifference = Date.now()-this.lastUpdate;
+                    this.lastUpdate += timeDifference;
+                    timeDifference /= 1000;
+                    this.time -= timeDifference;
+                    
+                    this.acceleration(timeDifference);
+                    
+                    this.speed.y += timeDifference*gravitation;
+                    
+                    // drag
+                    let dragForce = 1/2 * 1.2 * this.speed.length**2 * this.crossSectionalArea * this.dragCoefficient;
+                    let dragSpeed = dragForce / this.weight * timeDifference;
+                    let dragDirection = this.speed.copy().scale(1/this.speed.length);
+                    if (!isNaN(dragDirection.length)) this.speed.minus(dragDirection.scale(dragSpeed));
+                    
+                    this.pos.plus(this.speed.copy().scale(timeDifference));
+                    
+                    // update last positions
+                    this.lastPositions.unshift({pos: this.pos.copy(), brightness: this.brightness});
+                    if (this.lastPositions.length > this.lineLength) this.lastPositions.pop();
+                    
+                    this.draw();
+                    
+                    // delete if time expired
+                    if (this.time < 0) {
+                        this.timeExpired();
+                        this.remove();
+                    }
+                    
+                    this.updating = false;
+                }
+                remove() {
+                    for (let i = 0; i < elements.length; i++) {
+                        if (elements[i].updating) {
+                            elements = elements.slice(0, i).concat(elements.slice(i+1, elements.length));
+                            return;
+                        }
+                    }
+                }
+                draw() {
+                    ctx.lineWidth = this.radius;
+                    for (let i = 1; i < this.lastPositions.length; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(...this.lastPositions[i-1].pos.array);
+                        ctx.lineTo(...this.lastPositions[i].pos.array);
+                        let brightnessFactor = 1-i/this.lineLength;
+                        let brightness = this.lastPositions[i].brightness*brightnessFactor;
+                        ctx.strokeStyle = this.color.copy.multiplyRGB(brightness).fillStyle;
+                        ctx.stroke();
+                        ctx.closePath();
+                    }
+                    ctx.beginPath();
+                    ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI*2);
+                    ctx.fillStyle = this.color.copy.multiplyRGB(this.brightness).fillStyle;
+                    ctx.fill();
+                    ctx.closePath();
+                }
+                acceleration(timeDifference) {
+                }
+                timeExpired() {
+                }
+                get brightness() {
+                    return Math.min(1, this.time);
+                }
+            }
+            class LightDot extends Dot {
+                constructor(pos, speed) {
+                    super(pos, speed);
+                    this.time = Math.random()*0.5+1;
+                    this.crossSectionalArea = 0.5;
+                    this.weight = 10;
+                    this.dragCoefficient = 0.47;
+                    this.color = new Color(1, 0, 0);
+                    elements.push(this);
+                }
+            }
+            class Rocket extends Dot {
+                constructor(pos, speed) {
+                    super(pos, speed);
+                    this.time = Math.random()*1+2.5;
+                    this.crossSectionalArea = 4;
+                    this.weight = 100;
+                    this.dragCoefficient = 0.05;
+                    switch (Math.floor(Math.random()*3)) {
+                        case 0: this.color = new Color(0.5, 0.5, 0.0); break;
+                        case 1: this.color = new Color(0.5, 0.2, 0.0); break;
+                        case 2: this.color = new Color(0.5, 0.4, 0.2); break;
+                    }
+                    this.radius = 3;
+                    this.lineLength = 10;
+                    elements.push(this);
+                }
+                acceleration(timeDifference) {
+                    let direction = this.speed.copy().scale(1/this.speed.length);
+                    if (isNaN(direction.length)) direction = new Vector(0, -1);
+                    this.speed.plus(direction.scale(300*timeDifference));
+                }
+                timeExpired() {
+                    let color = new Color();
+                    for (let i = 0; i < 20; i++) {
+                        let direction = Math.random()*Math.PI*2;
+                        let absoluteSpeed = Math.random()*1000;
+                        let speedX = Math.cos(direction)*absoluteSpeed;
+                        let speedY = Math.sin(direction)*absoluteSpeed;
+                        let speed = new Vector(speedX, speedY).plus(this.speed);
+                        let lightDot = new LightDot(this.pos.copy(), speed);
+                        lightDot.color = color;
+                    }
+                }
+                get brightness() {
+                    return 1;
+                }
+            }
+            let elements = [];
+            function updateAll() {
+                window.requestAnimationFrame(updateAll);
+                ctx.beginPath();
+                ctx.fillStyle = "#000";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.closePath();
+                for (let i = 0; i < elements.length; i++) elements[i].update();
+                if (Math.random() < 0.05) {
+                    new Rocket(new Vector(canvas.width*Math.random(), canvas.height+100), new Vector(Math.random()*2-1, -20));
+                }
+            };
+            async function start() {
+                canvas.removeEventListener("click", start);
+                if (canvas.requestFullscreen) {
+                    canvas.requestFullscreen();
+                } else if (canvas.webkitRequestFullscreen) {
+                    canvas.webkitRequestFullscreen();
+                } else if (canvas.msRequestFullscreen) {
+                    canvas.msRequestFullscreen();
+                }
+                await new Promise((f) => setTimeout(f, 100));
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                updateAll();
+            };
+            canvas.addEventListener("click", start);
+        </script>
+    </body>
+</html>

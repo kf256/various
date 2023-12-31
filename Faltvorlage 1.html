@@ -59,6 +59,17 @@
                     ctx_tmp.scale(2**(-1.5), 2**(-1.5));
                     ctx_tmp.rotate(Math.PI/2*r-Math.PI/4);
                     ctx_tmp.translate(-s/2, -s/2);
+                    /*
+                    let ctx_tmpBorder = border/(2**(-1.5));
+                    let ctx_tmpX = -ctx_tmpBorder;
+                    let ctx_tmpY = -ctx_tmpBorder;
+                    let ctx_tmpS = s+ctx_tmpBorder*2;
+                    let imgBorder = ctx_tmpBorder/s*s2;
+                    let imgX = x-imgBorder;
+                    let imgY = y-imgBorder;
+                    let imgS = s2+imgBorder*2;
+                    ctx_tmp.drawImage(img, imgX, imgY, imgS, imgS, ctx_tmpX, ctx_tmpY, ctx_tmpS, ctx_tmpS);
+                    */
                     ctx_tmp.drawImage(img, x, y, s2, s2, 0, 0, s, s);
                     ctx_tmp.restore();
                 };
@@ -95,39 +106,53 @@
                 let data = ctx_tmp.getImageData(0, 0, s, s);
                 ctx.putImageData(data, X*s, Y*s);
             };
+            class Bild {
+                constructor(imgElm) {
+                    this.imgElm = imgElm;
+                    this.breite = this.imgElm.width;
+                    this.höhe = this.imgElm.height;
+                    this.mitteX = this.breite/2;
+                    this.mitteY = this.höhe/2;
+                    this.ausschnittGröße = Math.min(this.mitteX, this.mitteY);
+                }
+            }
+            class Seite {
+                constructor(bild, ausrichtung) {
+                    this.ausrichtung = ausrichtung;
+                    this.nachbarn = {links: null, rechts: null, oben: null, unten: null};
+                    this.bild = null;
+                    this.bildrotation = 0;
+                }
+            };
             let s = 500;
             canvas.width = s*2;
             canvas.height = s*3;
             canvas_tmp.width = s;
             canvas_tmp.height = s;
             let border = s/50;
-            async function drawAll() {
+            async function vorlageErstellen() {
+                let readers = [];
+                let promises = [];
+                let imgs = [];
+                for (let i = 0; i < 6; i++) {
+                    readers[i] = new FileReader();
+                    promises[i] = new Promise((f) => {readers[i].onload = f;return;});
+                    readers[i].readAsDataURL(file.files[5-i]);
+                }
+                for (let i = 0; i < 6; i++) await promises[i];
+                for (let i = 0; i < 6; i++) imgs[i] = await loadImage(readers[i].result);
+                //await new Promise((f) => {setTimeout(f, 0);});
                 if (file.files.length == 1) {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    let reader = new FileReader();
-                    let promise = new Promise((f) => {reader.onload = f;return;});
-                    reader.readAsDataURL(file.files[0]);
-                    await promise;
-                    let img = await loadImage(reader.result);
-                    await new Promise((f) => {setTimeout(f, 0);});
-                    bildMalen(img, img, img, {c: 0, l: 1, r: 1}, 0, 0, "↗", "Vorderseite", ["J", "I", "L", "K"]);
-                    bildMalen(img, img, img, {c: 0, l: 1, r: 1}, 1, 0, "↘", "Rechte Seite", ["G", "B", "C", "I"]);
-                    bildMalen(img, img, img, {c: 0, l: 3, r: 3}, 0, 1, "↙", "Hinterseite", ["E", "C", "D", "H"]);
-                    bildMalen(img, img, img, {c: 0, l: 3, r: 3}, 1, 1, "↘", "Linke Seite", ["F", "A", "J", "E"]);
-                    bildMalen(img, img, img, {c: 0, l: 3, r: 3}, 0, 2, "↖", "Oberseite", ["H", "L", "G", "F"]);
-                    bildMalen(img, img, img, {c: 0, l: 1, r: 1}, 1, 2, "↖", "Unterseite", ["D", "K", "A", "B"]);
+                    bildMalen(imgs[0], imgs[0], imgs[0], {c: 0, l: 1, r: 1}, 0, 0, "↗", "Vorderseite", ["J", "I", "L", "K"]);
+                    bildMalen(imgs[0], imgs[0], imgs[0], {c: 0, l: 1, r: 1}, 1, 0, "↘", "Rechte Seite", ["G", "B", "C", "I"]);
+                    bildMalen(imgs[0], imgs[0], imgs[0], {c: 0, l: 3, r: 3}, 0, 1, "↙", "Hinterseite", ["E", "C", "D", "H"]);
+                    bildMalen(imgs[0], imgs[0], imgs[0], {c: 0, l: 3, r: 3}, 1, 1, "↘", "Linke Seite", ["F", "A", "J", "E"]);
+                    bildMalen(imgs[0], imgs[0], imgs[0], {c: 0, l: 3, r: 3}, 0, 2, "↖", "Oberseite", ["H", "L", "G", "F"]);
+                    bildMalen(imgs[0], imgs[0], imgs[0], {c: 0, l: 1, r: 1}, 1, 2, "↖", "Unterseite", ["D", "K", "A", "B"]);
                 }
                 if (file.files.length == 6) {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    let imgs = [];
-                    for (let i = 0; i < 6; i++) {
-                        let reader = new FileReader();
-                        let promise = new Promise((f) => {reader.onload = f;return;});
-                        reader.readAsDataURL(file.files[5-i]);
-                        await promise;
-                        imgs[i] = await loadImage(reader.result);
-                        await new Promise((f) => {setTimeout(f, 0);});
-                    }
                     bildMalen(imgs[3], imgs[0], imgs[1], {c: 0, l: 1, r: 1}, 0, 0, "↗", "Vorderseite", ["J", "I", "L", "K"]);
                     bildMalen(imgs[4], imgs[1], imgs[5], {c: 0, l: 1, r: 1}, 1, 0, "↘", "Rechte Seite", ["G", "B", "C", "I"]);
                     bildMalen(imgs[3], imgs[2], imgs[1], {c: 0, l: 3, r: 3}, 0, 1, "↙", "Hinterseite", ["E", "C", "D", "H"]);
@@ -136,7 +161,7 @@
                     bildMalen(imgs[2], imgs[5], imgs[0], {c: 0, l: 1, r: 1}, 1, 2, "↖", "Unterseite", ["D", "K", "A", "B"]);
                 }
             };
-            drawAll();
+            vorlageErstellen();
         </script>
     </body>
 </html>
