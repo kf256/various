@@ -259,7 +259,40 @@
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.font = "100px sans-serif";
-            ctx.fillText("Bitte klicken!", canvas.width/2, canvas.height/2);
+            let clickText = "";
+            switch (navigator.language) {
+                case "bg": clickText = "Моля, кликнете!"; break;
+                case "zh": clickText = "请点击！"; break;
+                case "da": clickText = "Vær venlig at klikke!"; break;
+                case "de": clickText = "Bitte klicken!"; break;
+                case "en": clickText = "Click here!"; break;
+                case "et": clickText = "Palun klõpsake!"; break;
+                case "fi": clickText = "Klikkaa!"; break;
+                case "fr": clickText = "Veuillez cliquer!"; break;
+                case "el": clickText = "Παρακαλώ κάντε κλικ!"; break;
+                case "id": clickText = "Silakan klik!"; break;
+                case "it": clickText = "Cliccate!"; break;
+                case "ja": clickText = "クリックしてください！"; break;
+                case "ko": clickText = "클릭하세요!"; break;
+                case "lv": clickText = "Lūdzu, klikšķiniet!"; break;
+                case "lt": clickText = "Spauskite!"; break;
+                case "nl": clickText = "Klik!"; break;
+                case "nb": clickText = "Vennligst klikk!"; break;
+                case "pl": clickText = "Kliknij!"; break;
+                case "pt": clickText = "Por favor, clique!"; break;
+                case "rm": clickText = "Vă rugăm să faceți clic!"; break;
+                case "ru": clickText = "Пожалуйста, нажмите!"; break;
+                case "sv": clickText = "Vänligen klicka!"; break;
+                case "sk": clickText = "Prosím, kliknite!"; break;
+                case "sl": clickText = "Prosimo, kliknite!"; break;
+                case "es": clickText = "Haga clic!"; break;
+                case "cs": clickText = "Klikněte prosím!"; break;
+                case "tr": clickText = "Lütfen tıklayın!"; break;
+                case "uk": clickText = "Будь ласка, натисніть!"; break;
+                case "hu": clickText = "Kérem kattintson!"; break;
+                default: clickText = "Click here!"; break;
+            }
+            ctx.fillText(clickText, canvas.width/2, canvas.height/2);
             ctx.closePath();
             canvas.addEventListener("click", start);
         </script>
