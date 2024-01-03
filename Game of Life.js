@@ -1,7 +1,9 @@
 class GoL {
     constructor(data, fixedSize = false) {
-        switch (Object.prototype.toString.call(data)) {
-            case "[object Array]": {
+        let dataType = Object.prototype.toString.call(data);
+        dataType = dataType.slice(8, dataType.length-1);
+        switch (dataType) {
+            case "Array": {
                 if (Object.prototype.toString.call(data[0]) != "[object Array]") throw "Data type not supported";
                 this.height = data.length;
                 this.width = data[0].length;
@@ -13,11 +15,11 @@ class GoL {
                 }
                 break;
             }
-            case "[object String]": {
+            case "String": {
                 this.importRLE(data);
                 break;
             }
-            case "[object Object]": {
+            case "Object": {
                 this.width = data.width;
                 this.height = data.height;
                 this.data = new Array(this.width).fill(false);
@@ -26,7 +28,7 @@ class GoL {
                 break;
             }
             default: {
-                throw "Data type not supported";
+                throw `Data type "${dataType}" not supported`;
             }
         }
         this.fixedSize = fixedSize;
@@ -48,7 +50,7 @@ class GoL {
         let ruleCorrect = false;
         if (variables.rule == undefined) ruleCorrect = true;
         if (variables.rule.toLowerCase() == `b3/s23`) ruleCorrect = true;
-        if (!ruleCorrect) throw "Rule must be b3/s23";
+        if (!ruleCorrect) throw `Rule must be b3/s23, but is "${variables.rule}"`;
         this.width = variables.x*1;
         this.height = variables.y*1;
         this.data = new Array(this.width).fill(false);
@@ -77,7 +79,7 @@ class GoL {
                     number = 0;
                     numberlength = 0;
                     continue;
-                } else throw `Unexpected "${dataAsRLEString[j]}"`;
+                } else throw `Unexpected "${dataAsRLEString[j]}", only "o", "b" and "$" allowed`;
                 position += number;
                 number = 0;
                 numberlength = 0;
