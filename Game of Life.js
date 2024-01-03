@@ -47,7 +47,7 @@ class GoL {
         }
         let ruleCorrect = false;
         if (variables.rule == undefined) ruleCorrect = true;
-        if (variables.rule.toLowerCase == `b3/s23`) ruleCorrect = true;
+        if (variables.rule.toLowerCase() == `b3/s23`) ruleCorrect = true;
         if (!ruleCorrect) throw "Rule must be b3/s23";
         this.width = variables.x*1;
         this.height = variables.y*1;
