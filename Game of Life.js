@@ -33,7 +33,7 @@ class GoL {
         if (!this.fizedSize) this.removeBorders();
     }
     importRLE(RLE) {
-        let allLines = data.split(`\n`);
+        let allLines = RLE.split(`\n`);
         let mainLines = [];
         for (let i = 0; i < allLines.length; i++) {
             if (allLines[i][0] != `#`) mainLines.push(allLines[i]);
