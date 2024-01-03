@@ -14,51 +14,7 @@ class GoL {
                 break;
             }
             case "[object String]": {
-                let lines1 = data.split(`\n`);
-                let lines2 = [];
-                for (let i = 0; i < lines1.length; i++) {
-                    if (lines1[i][0] != `#`) lines2.push(lines1[i]);
-                }
-                let line1 = lines2[0].split(`, `);
-                let variables = {};
-                for (let i = 0; i < line1.length; i++) {
-                    let name = line1[i].slice(0, line1[i].indexOf(` `));
-                    let value = line1[i].slice(name.length+3, line1[i].length);
-                    variables[name] = value;
-                }
-                if (variables.rule.toLowerCase() != `b3/s23`) throw "Rule must be b3/s23";
-                this.width = variables.x*1;
-                this.height = variables.y*1;
-                this.data = new Array(this.width).fill(false);
-                this.data = new Array(this.height).fill(this.data);
-                this.data = JSON.parse(JSON.stringify(this.data));
-                let line2 = lines2.slice(1, lines2.length).join("");
-                let i = 0;
-                let position = 0;
-                let number = 0;
-                let numberlength = 0;
-                for (let j = 0; j < line2.length; j++) {
-                    if (line2[j] == "!") break;
-                    if ("0123456789".indexOf(line2[j]) != -1) {
-                        number *= 10;
-                        number += line2[j]*1;
-                        numberlength++;
-                    } else {
-                        if (numberlength == 0) number = 1;
-                        if (line2[j] == "o") {
-                            this.data[i].fill(true, position, position+number);
-                        } else if (line2[j] == "$") {
-                            i += number;
-                            position = 0;
-                            number = 0;
-                            numberlength = 0;
-                            continue;
-                        }
-                        position += number;
-                        number = 0;
-                        numberlength = 0;
-                    }
-                }
+                this.importRLE(data);
                 break;
             }
             case "[object Object]": {
@@ -74,8 +30,59 @@ class GoL {
             }
         }
         this.fixedSize = fixedSize;
-        //if (!this.fizedSize) this.removeBorders();
-        //this.log();
+        if (!this.fizedSize) this.removeBorders();
+    }
+    importRLE(RLE) {
+        let allLines = data.split(`\n`);
+        let mainLines = [];
+        for (let i = 0; i < allLines.length; i++) {
+            if (allLines[i][0] != `#`) mainLines.push(allLines[i]);
+        }
+        let variablesLine = mainLines[0].split(`, `);
+        let variables = {};
+        for (let i = 0; i < variablesLine.length; i++) {
+            let name = variablesLine[i].slice(0, variablesLine[i].indexOf(` `));
+            let value = variablesLine[i].slice(name.length+3, variablesLine[i].length);
+            variables[name] = value;
+        }
+        let ruleCorrect = false;
+        if (variables.rule == undefined) ruleCorrect = true;
+        if (variables.rule.toLowerCase == `b3/s23`) ruleCorrect = true;
+        if (!ruleCorrect) throw "Rule must be b3/s23";
+        this.width = variables.x*1;
+        this.height = variables.y*1;
+        this.data = new Array(this.width).fill(false);
+        this.data = new Array(this.height).fill(this.data);
+        this.data = JSON.parse(JSON.stringify(this.data));
+        let dataAsRLEString = mainLines.slice(1, mainLines.length).join("");
+        let i = 0;
+        let position = 0;
+        let number = 0;
+        let numberlength = 0;
+        for (let j = 0; j < dataAsRLEString.length; j++) {
+            if (dataAsRLEString[j] == "!") return;
+            if ("0123456789".indexOf(dataAsRLEString[j]) != -1) {
+                number *= 10;
+                number += dataAsRLEString[j]*1;
+                numberlength++;
+            } else {
+                if (numberlength == 0) number = 1;
+                if (dataAsRLEString[j] == "o") {
+                    this.data[i].fill(true, position, position+number);
+                } else if (dataAsRLEString[j] == "b") {
+                    this.data[i].fill(false, position, position+number);
+                } else if (dataAsRLEString[j] == "$") {
+                    i += number;
+                    position = 0;
+                    number = 0;
+                    numberlength = 0;
+                    continue;
+                } else throw `Unexpected "${dataAsRLEString[j]}"`;
+                position += number;
+                number = 0;
+                numberlength = 0;
+            }
+        }
     }
     addBorders() {
         this.data.unshift(new Array(this.width).fill(false));
@@ -93,11 +100,11 @@ class GoL {
             this.data.pop();
             this.height--;
         }
-        while (this.leftFree()) this.removeLeft();
-        while (this.rightFree()) this.removeRight();
+        while (this.leftFree) this.removeLeft();
+        while (this.rightFree) this.removeRight();
 
     }
-    leftFree() {
+    get leftFree() {
         if (this.width == 0) return false;
         for (let i = 0; i < this.height; i++) {
             if (this.data[i][0]) return false;
@@ -109,7 +116,7 @@ class GoL {
         for (let i = 0; i < this.height; i++) this.data[i].shift();
         this.width--;
     }
-    rightFree() {
+    get rightFree() {
         if (this.width == 0) return false;
         for (let i = 0; i < this.height; i++) {
             if (this.data[i][this.width-1]) return false;
@@ -132,7 +139,7 @@ class GoL {
         //console.clear();
         console.log(text);
     }
-    nextStep() {
+    nextGeneration() {
         if (!this.fizedSize) this.addBorders();
         let newData = new Array(this.width).fill(false);
         newData = new Array(this.height).fill(newData);
@@ -171,7 +178,6 @@ class GoL {
         }
         this.data = newData;
         if (!this.fizedSize) this.removeBorders();
-        this.log();
     }
     findParent() {
         let pos = 0;
@@ -388,6 +394,7 @@ class GoL {
         }
         return RLE;
     }
+    
     static characters5x5 = {
         "A": new GoL([
             [0,1,0],
