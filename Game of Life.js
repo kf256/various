@@ -50,7 +50,7 @@ class GoL {
         }
         let ruleCorrect = false;
         if (variables.rule == undefined) ruleCorrect = true;
-        if (variables.rule.toLowerCase() == `b3/s23`) ruleCorrect = true;
+        else if (variables.rule.toLowerCase() == `b3/s23`) ruleCorrect = true;
         if (!ruleCorrect) throw `Rule must be b3/s23, but is "${variables.rule}"`;
         if (variables.x == undefined) throw `no width specified`;
         if (variables.y == undefined) throw `no height specified`;
@@ -422,7 +422,23 @@ class GoL {
         }
         return RLE;
     }
+    drawAsSquares(canvasContext, scale = 10, dx = 0, dy = 0) {
+        canvasContext.beginPath();
+        canvasContext.fillStyle = GoL.ctxBackgroundColor;
+        canvasContext.fillRect(dx, dy, this.width*scale, this.height*scale);
+        canvasContext.fillStyle = GoL.ctxForegroundColor;
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                if (this.data[y][x]) {
+                    canvasContext.fillRect(x*scale+dx, y*scale+dy, scale, scale);
+                }
+            }
+        }
+        canvasContext.closePath();
+    }
     
+    static ctxBackgroundColor = "white";
+    static ctxForegroundColor = "black";
     static characters5x5 = {
         "A": new GoL([
             [0,1,0],
