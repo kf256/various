@@ -31,6 +31,7 @@ class GoL {
                 throw `Data type "${dataType}" not supported`;
             }
         }
+        this.position = {x: 0, y: 0};
         this.fixedSize = fixedSize;
         if (!this.fizedSize) this.removeBorders();
     }
@@ -118,11 +119,14 @@ class GoL {
         this.data.map(function(array) {array.unshift(false);array.push(false);});
         this.width += 2;
         this.height += 2;
+        this.position.x--;
+        this.position.y--;
     }
     removeBorders() {
         while (this.height > 0 && (this.data[0].indexOf(true) == -1)) {
             this.data.shift();
             this.height--;
+            this.position++;
         }
         while (this.height > 0 && (this.data[this.height-1].indexOf(true) == -1)) {
             this.data.pop();
@@ -143,6 +147,7 @@ class GoL {
         if (this.width == 0) return;
         for (let i = 0; i < this.height; i++) this.data[i].shift();
         this.width--;
+        this.position++;
     }
     get rightFree() {
         if (this.width == 0) return false;
@@ -430,7 +435,7 @@ class GoL {
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 if (this.data[y][x]) {
-                    canvasContext.fillRect(x*scale+dx, y*scale+dy, scale, scale);
+                    canvasContext.fillRect((x+this.position.x)*scale+dx, (y+this.position.y)*scale+dy, scale, scale);
                 }
             }
         }
