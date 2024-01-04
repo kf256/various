@@ -5,10 +5,27 @@
         <title>
             Cellular automaton
         </title>
+        <style>
+            body {
+                margin: 0px;
+            }
+            #canvas {
+                position: absolute;
+                top: 0px;
+                left: 0px;
+            }
+        </style>
     </head>
     <body>
+        <canvas id="canvas"></canvas>
         <script src="https://kf256.github.io/various/Game of Life.js"></script>
         <script>
+            let canvas = document.getElementById("canvas");
+            canvas.width = document.body.clientWidth;
+            canvas.height = document.body.clientHeight;
+            let ctx = canvas.getContext("2d");
+            
+            
             let glider = new GoL(`x = 3, y = 3, rule = B3/S23\no$b2o$2o!`);
             let spaceRake = new GoL(`x = 22, y = 19, rule = b3/s23\n11b2o5b4o$9b2ob2o3bo3bo$9b4o8bo$10b2o5bo2bob2$8bo13b$7b2o8b2o3b$6bo9bo\n2bo2b$7b5o4bo2bo2b$8b4o3b2ob2o2b$11bo4b2o4b4$18b4o$o2bo13bo3bo$4bo16bo\n$o3bo12bo2bob$b4o!`);
             let backwardSpaceRake = new GoL(`x = 23, y = 20, rule = b3/s23\n12b2o5b4o$10b2ob2o3bo3bo$10b4o8bo$11b2o5bo2bob2$9bo13b$8b2o8b2o3b$7bo\n9bo2bo2b$8b5o4bo2bo2b$9b4o3b2ob2o2b$12bo4b2o4b4$19b4o$18bo3bo$b4o17bo$\no3bo13bo2bob$4bo18b$o2bo!`);
@@ -24,6 +41,14 @@
             for (let i = 0; i < 60; i++) backwardSpaceRake.nextGeneration();
             console.log("Backward space rake after 60 generations:");
             backwardSpaceRake.log();
+            
+            
+            function animation() {
+                glider.drawAsSquares(ctx, 20, 100, 100);
+                glider.nextGeneration();
+                setTimeout(animation, 1000);
+            };
+            animation();
         </script>
     </body>
 </html>
