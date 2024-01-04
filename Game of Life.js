@@ -430,7 +430,7 @@ class GoL {
     drawAsSquares(canvasContext, scale = 10, dx = 0, dy = 0) {
         canvasContext.beginPath();
         canvasContext.fillStyle = GoL.ctxBackgroundColor;
-        canvasContext.fillRect(dx, dy, this.width*scale, this.height*scale);
+        canvasContext.fillRect(dx+this.position.x*scale, dy+this.position.y*scale, this.width*scale, this.height*scale);
         canvasContext.fillStyle = GoL.ctxForegroundColor;
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
