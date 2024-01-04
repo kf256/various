@@ -40,6 +40,7 @@ class GoL {
         for (let i = 0; i < allLines.length; i++) {
             if (allLines[i][0] != `#`) mainLines.push(allLines[i]);
         }
+        if (mainLines.length == 0) throw "no lines without #";
         let variablesLine = mainLines[0].split(`, `);
         let variables = {};
         for (let i = 0; i < variablesLine.length; i++) {
@@ -51,18 +52,38 @@ class GoL {
         if (variables.rule == undefined) ruleCorrect = true;
         if (variables.rule.toLowerCase() == `b3/s23`) ruleCorrect = true;
         if (!ruleCorrect) throw `Rule must be b3/s23, but is "${variables.rule}"`;
-        this.width = variables.x*1;
-        this.height = variables.y*1;
+        if (variables.x == undefined) throw `no width specified`;
+        if (variables.y == undefined) throw `no height specified`;
+        if (isNaN(variables.x)) throw `width is not a number`;
+        if (isNaN(variables.y)) throw `height is not a number`;
+        variables.x = Number(variables.x);
+        variables.y = Number(variables.y);
+        if (variables.x < 0) throw `width is negative`;
+        if (variables.y < 0) throw `height is negative`;
+        if (variables.x%1 != 0) throw "width is not an integer";
+        if (variables.y%1 != 0) throw "height is not an integer";
+        this.width = variables.x;
+        this.height = variables.y;
         this.data = new Array(this.width).fill(false);
         this.data = new Array(this.height).fill(this.data);
         this.data = JSON.parse(JSON.stringify(this.data));
         let dataAsRLEString = mainLines.slice(1, mainLines.length).join("");
+        if (dataAsRLEString.length == 0) throw "no data";
         let i = 0;
         let position = 0;
         let number = 0;
         let numberlength = 0;
-        for (let j = 0; j < dataAsRLEString.length; j++) {
-            if (dataAsRLEString[j] == "!") return;
+        for (let j = 0; true; j++) {
+            if (j == dataAsRLEString.length) {
+                throw `missing "!"`;
+            }
+            if (dataAsRLEString[j] == "!") {
+                if (numberlength > 0) throw `unexpected "!", expecting "o", "b", "$" or digit`;
+                if (j == 0) {
+                    if (this.width != 0 && this.height != 0) throw "no data";
+                }
+                break;
+            }
             if ("0123456789".indexOf(dataAsRLEString[j]) != -1) {
                 number *= 10;
                 number += dataAsRLEString[j]*1;
@@ -70,15 +91,20 @@ class GoL {
             } else {
                 if (numberlength == 0) number = 1;
                 if (dataAsRLEString[j] == "o") {
+                    if (position+number > this.width) throw `too many cells in data in row ${i}`;
                     this.data[i].fill(true, position, position+number);
                 } else if (dataAsRLEString[j] == "b") {
+                    if (position+number > this.width) throw `too many cells in data in row ${i}`;
                     this.data[i].fill(false, position, position+number);
                 } else if (dataAsRLEString[j] == "$") {
+                    if (i+number > this.height) throw `too many lines in data`;
                     i += number;
                     position = 0;
                     number = 0;
                     numberlength = 0;
                     continue;
+                } else if (dataAsRLEString[j] == " ") {
+                    if (numberlength != 0) throw "no space between number and letter allowed";
                 } else throw `Unexpected "${dataAsRLEString[j]}", only "o", "b" and "$" allowed`;
                 position += number;
                 number = 0;
