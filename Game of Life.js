@@ -97,7 +97,7 @@ class GoL {
                     if (position+number > this.width) throw `too many cells in data in row ${i}`;
                     this.data[i].fill(false, position, position+number);
                 } else if (dataAsRLEString[j] == "$") {
-                    if (i+number > this.height) throw `too many lines in data`;
+                    if (i+number >= this.height) throw `too many lines in data`;
                     i += number;
                     position = 0;
                     number = 0;
