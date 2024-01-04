@@ -126,7 +126,7 @@ class GoL {
         while (this.height > 0 && (this.data[0].indexOf(true) == -1)) {
             this.data.shift();
             this.height--;
-            this.position++;
+            this.position.y++;
         }
         while (this.height > 0 && (this.data[this.height-1].indexOf(true) == -1)) {
             this.data.pop();
@@ -147,7 +147,7 @@ class GoL {
         if (this.width == 0) return;
         for (let i = 0; i < this.height; i++) this.data[i].shift();
         this.width--;
-        this.position++;
+        this.position.x++;
     }
     get rightFree() {
         if (this.width == 0) return false;
