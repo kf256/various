@@ -20,7 +20,7 @@
         <canvas id="canvas"></canvas>
         <script>
             async function main() {
-                let script = document.createElement(script);
+                let script = document.createElement("script");
                 script.src = "https://kf256.github.io/various/Game of Life.js?"+Date.now();
                 document.body.appendChild(script);
                 while (typeof GoL === 'undefined') await new Promise(f => setTimeout(f, 100));
