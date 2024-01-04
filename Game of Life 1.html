@@ -50,8 +50,10 @@
                 
                 
                 function animation() {
-                    glider.drawAsSquares(ctx, 20, 100, 100);
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
                     glider.nextGeneration();
+                    glider.drawAsSquares(ctx, 20, 100, 100);
                     setTimeout(animation, 1000);
                 };
                 animation();
