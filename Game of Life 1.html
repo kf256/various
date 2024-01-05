@@ -67,8 +67,8 @@
                     glider.nextGeneration();
                     
                     // reset position if glider moved out of the screen
-                    if (glider.position.x > canvas.width) glider.position.x = -3;
-                    if (glider.position.y > canvas.height) glider.position.y = -3;
+                    if (glider.position.x*20 > canvas.width) glider.position.x = -3;
+                    if (glider.position.y*20 > canvas.height) glider.position.y = -3;
                     
                     // draw glider
                     glider.drawAsSquares(ctx, 20, 0, 0);
