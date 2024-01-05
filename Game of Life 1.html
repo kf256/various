@@ -26,7 +26,7 @@
                 script.src = "https://kf256.github.io/various/Game of Life.js?"+Date.now();
                 document.body.appendChild(script);
                 await new Promise((resolve) => {
-                    if (GoL) resolve();
+                    if (typeof GoL !== "undefined") resolve();
                     else {
                         script.addEventListener("load", resolve);
                     }
