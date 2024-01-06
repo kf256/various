@@ -123,7 +123,7 @@ Number.prototype.clamp = function() {
 };
 Array.prototype.shuffle = function() {
     for (let i = this.length-1; i > 0; i--) {
-        let j = rand(i+1);
+        let j = Math.randInt(i+1);
         [this[i], this[j]] = [this[j], this[i]];
     }
 };
@@ -133,7 +133,7 @@ Array.prototype.isPositiveInteger = function() {
     return true;
 };
 Array.prototype.random = function(not = []) {
-    let result = this[Math.floor(Math.random()*this.length)];
+    let result = this[Math.randInt(this.length)];
     while (not.indexOf(result) != -1) result = this[Math.floor(Math.random()*this.length)];
     return result;
 };
