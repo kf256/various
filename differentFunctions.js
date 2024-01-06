@@ -115,6 +115,9 @@ Math.rsaDecrypt = function(c, keys) {
     for (let i = 0; i < c.length; i++) message[i] = Math.powerMod(c[i], keys.d, keys.N);
     return message;
 };
+Math.randInt = function(integer) {
+    return Math.floor(Math.random()*integer);
+};
 Number.prototype.clamp = function() {
     return Math.min(Math.max(this, 0), 1);
 };
@@ -150,6 +153,18 @@ Array.prototype.fillWithArray = function(a) {
     for (let i = 0; i < this.length; i++) this[i] = a.copy();
     return this;
 };
+Array.prototype.findString = function(string) {
+    let min = Infinity;
+    let minIndex = null;
+    for (let i = 0; i < this.length; i++) {
+        let dist = string.lDist(this[i]);
+        if (dist < min) {
+            min = dist;
+            minIndex = i;
+        }
+    }
+    return {min: min, minIndex: minIndex};
+};
 String.prototype.lDist = function(string) {
     let m = new Array(this.length+1).fillWithArray(new Array(string.length+1));
     for (let y = 0; y < m.length; y++) {
@@ -162,15 +177,6 @@ String.prototype.lDist = function(string) {
     }
     return m[this.length][string.length];
 };
-Array.prototype.findString = function(string) {
-    let min = Infinity;
-    let minIndex = null;
-    for (let i = 0; i < this.length; i++) {
-        let dist = string.lDist(this[i]);
-        if (dist < min) {
-            min = dist;
-            minIndex = i;
-        }
-    }
-    return {min: min, minIndex: minIndex};
+JSON.copy = function(e) {
+    return JSON.parse(JSON.stringify(e));
 };
