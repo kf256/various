@@ -226,7 +226,7 @@
                     ctx.fillStyle = "black";
                     ctx.fillText(zustand, canvas.width/2, canvas.height/2);
                     ctx.closePath();
-                    if (Date.now()/1000-time > 2) {
+                    if (Date.now()/1000-time > 1) {
                         if (zustand == "Verloren!") zustand = "Nochmal versuchen?";
                         if (zustand == "Gewonnen!") zustand = "Nochmal spielen?";
                         if (maus) {
