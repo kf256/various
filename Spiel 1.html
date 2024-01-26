@@ -32,9 +32,7 @@
             }
             let magnete, pos, speed;
             let time = 0, start, delay;
-            function redPos() {
-                return (Date.now()/1000-start)/7-1;
-            }
+            let lavaPos;
             function mapRange(value, min1, max1, min2, max2) {
                 value -= min1;
                 value /= max1-min1;
@@ -87,7 +85,7 @@
                     ctx.stroke();
                 }
                 magneteMalen()
-                rotenBereichMalen();
+                lavaMalen();
                 zielMalen();
                 blauenKreisMalen();
                 fortschrittMalen();
@@ -96,7 +94,7 @@
                     spielLaufend = false;
                     zustand = "Gewonnen!";
                 }
-                if (pos[0] < 1/40+redPos()) {
+                if (pos[0] < 1/40+lavaPos()) {
                     console.log("Verloren!");
                     spielLaufend = false;
                     zustand = "Verloren!";
@@ -136,12 +134,52 @@
                     ctx.closePath();
                 }
             }
-            function rotenBereichMalen() {
+            function lavaMalen() {
+                let minX = -canvas.width+lavaPos()*size+canvas.width/2-pos[0]*size;
+                let maxX = lavaPos()*size+canvas.width/2-pos[0]*size;
+                for (let x = 0; x < 1; x += 0.02) {
+                    ctx.beginPath();
+                    ctx.rect(maxX-10, 0, (x**2)*size*3, canvas.height);
+                    ctx.fillStyle = `#80000001`;
+                    ctx.fill();
+                    ctx.closePath();
+                }
                 ctx.beginPath();
-                ctx.rect(-canvas.width+redPos()*size+canvas.width/2-pos[0]*size, 0, canvas.width, canvas.height);
-                ctx.fillStyle = "red";
+                ctx.moveTo(minX, canvas.height);
+                ctx.lineTo(minX, 0);
+                for (let y = 0; y < 1.01; y += 0.01) {
+                    let a1 = y*41+Date.now()/666;
+                    let a2 = y*61-Date.now()/555;
+                    let x = Math.sin(a1)*4+Math.sin(a2)*3;
+                    ctx.lineTo(maxX+x*size/1000, y*canvas.height);
+                }
+                ctx.lineTo(minX, canvas.height);
+                ctx.fillStyle = "#f88";
                 ctx.fill();
                 ctx.closePath();
+                ctx.beginPath();
+                ctx.moveTo(minX, canvas.height);
+                ctx.lineTo(minX, 0);
+                for (let y = 0; y < 1.01; y += 0.01) {
+                    let a1 = y*30+Date.now()/500;
+                    let a2 = y*50-Date.now()/600;
+                    let x = Math.sin(a1)*7+Math.sin(a2)*5-7;
+                    ctx.lineTo(maxX+x*size/1000, y*canvas.height);
+                }
+                ctx.lineTo(minX, canvas.height);
+                ctx.fillStyle = "#f00";
+                ctx.fill();
+                ctx.closePath();
+                for (let i = 0; i < 20*3; i++) {
+                    let x = -55+Math.sin(Date.now()/5000+Math.sin(i*2)*Math.PI)*50;
+                    let y = (i-Date.now()/500)/20%3+2;
+                    let r = Math.sin(i*2.5)+5;
+                    ctx.beginPath();
+                    ctx.arc(maxX+x*size/100, y*size, r*size/300, 0, Math.PI*2);
+                    ctx.fillStyle = "#f66";
+                    ctx.fill();
+                    ctx.closePath();
+                }
             }
             function zielMalen() {
                 ctx.beginPath();
@@ -164,7 +202,7 @@
                 ctx.fill();
                 ctx.closePath();
                 ctx.beginPath();
-                ctx.rect(canvas.width/10, 10, mapRange(redPos(), -1, 10, 0, canvas.width/5*4), 10);
+                ctx.rect(canvas.width/10, 10, mapRange(lavaPos(), -1, 10, 0, canvas.width/5*4), 10);
                 ctx.fillStyle = "red";
                 ctx.fill();
                 ctx.closePath();
@@ -202,6 +240,9 @@
                             time = Date.now()/1000;
                             start = Date.now()/1000;
                             delay = 0;
+                            lavaPos = function() {
+                                return (Date.now()/1000-start)/7-1;
+                            }
                         }
                     }
                 }
