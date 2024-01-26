@@ -33,6 +33,7 @@
             let magnete, pos, speed;
             let time = 0, start, delay;
             let lavaPos;
+            let ausgewaehlterMagnet = -1;
             function mapRange(value, min1, max1, min2, max2) {
                 value -= min1;
                 value /= max1-min1;
@@ -58,15 +59,19 @@
                         minI = i;
                     }
                 }
+                if (!maus) ausgewaehlterMagnet = minI;
                 if (minI != -1) {
                     let dx = magnete[minI][0]-pos[0];
                     let dy = magnete[minI][1]-pos[1];
                     let d = Math.hypot(dx, dy);
                     magnetKollisionBerechnen(minI);
-                    if (maus) {
-                        speed[0] += dx*delay/minD*2;
-                        speed[1] += dy*delay/minD*2;
-                    }
+                }
+                if (maus && ausgewaehlterMagnet != -1) {
+                    let dx = magnete[ausgewaehlterMagnet][0]-pos[0];
+                    let dy = magnete[ausgewaehlterMagnet][1]-pos[1];
+                    let d = Math.hypot(dx, dy);
+                    speed[0] += dx*delay/minD*2;
+                    speed[1] += dy*delay/minD*2;
                 }
                 bodenKollisionBerechnen();
                 speed[0] *= 0.7**delay;
@@ -84,10 +89,10 @@
                 pos[0] += speed[0]*delay;
                 pos[1] += speed[1]*delay;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                if (minI != -1) {
+                if (ausgewaehlterMagnet != -1) {
                     ctx.beginPath();
                     ctx.moveTo(canvas.width/2, pos[1]*size);
-                    ctx.lineTo(magnete[minI][0]*size+canvas.width/2-pos[0]*size, magnete[minI][1]*size);
+                    ctx.lineTo(magnete[ausgewaehlterMagnet][0]*size+canvas.width/2-pos[0]*size, magnete[ausgewaehlterMagnet][1]*size);
                     ctx.lineWidth = maus ? 2 : 0.5;
                     ctx.stroke();
                 }
@@ -247,6 +252,7 @@
                             time = Date.now()/1000;
                             start = Date.now()/1000;
                             delay = 0;
+                            ausgewaehlterMagnet = -1;
                             lavaPos = function() {
                                 return (Date.now()/1000-start)/7-1;
                             }
