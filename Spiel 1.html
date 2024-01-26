@@ -19,8 +19,15 @@
             let pos = [0.5, 0.5];
             let speed = [0, 0];
             let maus = false;
-            document.addEventListener("pointerdown", () => maus = true);
-            document.addEventListener("pointerup", () => maus = false);
+            let isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+            if (isTouchDevice) {
+                document.addEventListener("touchstart", () => maus = true);
+                document.addEventListener("touchend", () => maus = false);
+                document.addEventListener("touchcancel", () => maus = false);
+            } else {
+                document.addEventListener("mousedown", () => maus = true);
+                document.addEventListener("mouseup", () => maus = false);
+            }
             let time = Date.now()/1000;
             let start = Date.now()/1000;
             let delay = 0;
