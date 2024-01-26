@@ -46,6 +46,8 @@
                 let minD = Infinity;
                 let minI = -1;
                 for (let i = 0; i < magnete.length; i++) {
+                    if (magnete[i][0] < lavaPos()+0.1) magnete[i][0] -= delay;
+                    else if (magnete[i][0] < lavaPos()+0.2) magnete[i][0] -= delay/2;
                     let dx = magnete[i][0]-pos[0];
                     let dy = magnete[i][1]-pos[1];
                     let d = Math.hypot(dx, dy);
@@ -73,6 +75,8 @@
                     speed[1] = 2*Math.cos(direction);
                     console.log("Speed limit");
                 }
+                if (pos[0] < lavaPos()+0.1) pos[0] -= delay;
+                else if (pos[0] < lavaPos()+0.2) pos[0] -= delay/2;
                 speed[1] += delay;
                 pos[0] += speed[0]*delay;
                 pos[1] += speed[1]*delay;
