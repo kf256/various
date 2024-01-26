@@ -30,10 +30,7 @@
                 document.addEventListener("mousedown", () => maus = true);
                 document.addEventListener("mouseup", () => maus = false);
             }
-            let magnete, pos, speed;
-            let time = 0, start, delay;
-            let lavaPos;
-            let ausgewaehlterMagnet = -1;
+            let magnete, pos, speed, lavaPos, ausgewaehlterMagnet, time = 0, start, delay;
             function mapRange(value, min1, max1, min2, max2) {
                 value -= min1;
                 value /= max1-min1;
