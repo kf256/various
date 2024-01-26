@@ -4,7 +4,7 @@
         <meta charset="utf-8">
     </head>
     <body>
-        <input type="file" id="file" onchange="drawAll();" multiple>
+        <input type="file" id="file" oninput="vorlageErstellen();" multiple>
         </input>
         <br>
         <canvas id="canvas" width="400" height="400">
@@ -20,18 +20,18 @@
             let ctx_tmp = canvas_tmp.getContext("2d");
             let file = document.getElementById("file");
             let images = document.getElementById("images");
-            function waitForElm(selector) {
+            function waitForElm(id) {
                 return new Promise(resolve => {
-                    if (document.querySelector(selector)) {
-                        return resolve(document.querySelector(selector));
+                    if (document.getElementById(id)) {
+                        return resolve(document.getElementById(id));
                     }
                     const observer = new MutationObserver(mutations => {
-                        if (document.querySelector(selector)) {
+                        if (document.getElementById(id)) {
                             observer.disconnect();
-                            resolve(document.querySelector(selector));
+                            resolve(document.getElementById(id));
                         }
                     });
-                    observer.observe(document.body, {
+                    observer.observe(images, {
                         childList: true,
                         subtree: true
                     });
@@ -43,7 +43,8 @@
                 let id = "id"+images.children.length.toString();
                 image.setAttribute("id", id);
                 images.appendChild(image);
-                return await waitForElm("#"+id);
+                await waitForElm(id);
+                return image;
             }
             function bildMalen(imgLeft, imgCenter, imgRight, rot, X, Y, pfeil, text, zahlen) {
                 ctx_tmp.clearRect(0, 0, s, s);
@@ -88,10 +89,10 @@
                 ctx_tmp.fillStyle = "#555";
                 ctx_tmp.beginPath();
                 ctx_tmp.font = "bold "+s/20+"px sans-serif";
-                ctx_tmp.fillText(zahlen[0], s/16*13, s/8*7);
+                ctx_tmp.fillText(zahlen[0], s/8*5, s/16*5);
                 ctx_tmp.fillText(zahlen[1], s/16*3, s/8);
-                ctx_tmp.fillText(zahlen[2], s/8*5, s/16*5);
-                ctx_tmp.fillText(zahlen[3], s/8*3, s/16*11);
+                ctx_tmp.fillText(zahlen[3], s/16*13, s/8*7);
+                ctx_tmp.fillText(zahlen[2], s/8*3, s/16*11);
                 ctx_tmp.closePath();
                 ctx_tmp.fillStyle = "black";
                 ctx_tmp.beginPath();
@@ -107,24 +108,155 @@
                 ctx.putImageData(data, X*s, Y*s);
             };
             class Bild {
-                constructor(imgElm) {
-                    this.imgElm = imgElm;
-                    this.breite = this.imgElm.width;
-                    this.höhe = this.imgElm.height;
-                    this.mitteX = this.breite/2;
-                    this.mitteY = this.höhe/2;
-                    this.ausschnittGröße = Math.min(this.mitteX, this.mitteY);
+                constructor(blob) {
+                    return new Promise(async (resolveAll) => {
+                        let reader = new FileReader();
+                        let promise = new Promise(resolve => reader.onload = resolve);
+                        reader.readAsDataURL(blob);
+                        await promise;
+                        this.imgElm = document.createElement("img");
+                        this.imgElm.setAttribute("src", reader.result);
+                        let id = "id"+images.children.length.toString();
+                        this.imgElm.setAttribute("id", id);
+                        images.appendChild(this.imgElm);
+                        await waitForElm(id);
+                        this.breite = this.imgElm.width;
+                        this.höhe = this.imgElm.height;
+                        this.mitteX = this.breite/2;
+                        this.mitteY = this.höhe/2;
+                        this.ausschnittGröße = Math.min(this.breite, this.höhe)*0.5;
+                        resolveAll(this);
+                    });
+                }
+                toCanvas(posX, posY, size, drehung) {
+                    let canvasImg = document.createElement("canvas");
+                    canvasImg.width = canvasImg.height = size;
+                    document.body.appendChild(canvasImg);
+                    let ctxImg = canvasImg.getContext("2d");
+                    ctxImg.translate(posX, posY);
+                    ctxImg.scale(size, size);
+                    ctxImg.translate(0.5, 0.5);
+                    ctxImg.rotate(drehung*Math.PI/2);
+                    ctxImg.scale(1/this.ausschnittGröße, 1/this.ausschnittGröße);
+                    ctxImg.translate(-this.mitteX, -this.mitteY);
+                    ctxImg.scale(this.breite, this.höhe);
+                    ctxImg.drawImage(this.imgElm, 0, 0, 1, 1);
+                    return canvasImg;
                 }
             }
             class Seite {
-                constructor(bild, ausrichtung) {
-                    this.ausrichtung = ausrichtung;
-                    this.nachbarn = {links: null, rechts: null, oben: null, unten: null};
+                constructor() {
                     this.bild = null;
-                    this.bildrotation = 0;
+                    this.index = Seite.instances.length;
+                    Seite.instances.push(this);
                 }
-            };
-            let s = 500;
+                malen1() {
+                    canvas.width  = s*3.5;
+                    canvas.height = s*3.5;
+                    if (this.bild != null) {
+                        let canvasImg = this.bild.toCanvas(0, 0, s);
+                        ctx.drawImage(canvasImg, 1.25*s, 1.25*s);
+                        canvasImg.remove();
+                    }
+                    ctx.beginPath();
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(1.25*s, 1.25*s, s, s);
+                    ctx.closePath();
+                    let nachbarn = this.nachbarn;
+                    for (let i = 0; i < nachbarn.length; i++) {
+                        let pos = Seite.seiteZuPosition(nachbarn[i].seite);
+                        let bild = Seite.instances[nachbarn[i].index].bild;
+                        if (bild == null) continue;
+                        let canvasImg = bild.toCanvas(0, 0, s, nachbarn[i].rotation);
+                        ctx.drawImage(canvasImg, pos.x*s, pos.y*s);
+                        canvasImg.remove();
+                    }
+                }
+                malen2(x, y) {
+                    let bildLinks;
+                    let bildMitte = this.bild;
+                    let bildRechts;
+                    let rotationen = {};
+                    rotationen.c = Seite.seiteZuZahl(this.ausrichtung);
+                    let nummern = [];
+                    let nachbarn = this.nachbarn;
+                    console.log(nachbarn);
+                    for (let i = 0; i < nachbarn.length; i++) {
+                        let zahl1 = Seite.seiteZuZahl(this.ausrichtung);
+                        let zahl2 = Seite.seiteZuZahl(nachbarn[i].seite);
+                        nummern[zahl2] = nachbarn[i].nummer;
+                        console.log(nachbarn[i].rotation, zahl2);
+                        if ((zahl1+1)%4 == zahl2) {
+                            bildRechts = Seite.instances[nachbarn[i].index].bild;
+                            rotationen.r = nachbarn[i].rotation-zahl2;
+                        }
+                        if ((zahl1+3)%4 == zahl2) {
+                            bildLinks = Seite.instances[nachbarn[i].index].bild;
+                            rotationen.l = nachbarn[i].rotation-zahl2;
+                        }
+                    }
+                    if (bildRechts == null) {
+                        console.warn("bildRechts ist nicht definiert.");
+                        return "Abgebrochen";
+                    }
+                    if (bildMitte == null) {
+                        console.warn("bildMitte ist nicht definiert.");
+                        return "Abgebrochen";
+                    }
+                    if (bildLinks == null) {
+                        console.warn("bildLinks ist nicht definiert.");
+                        return "Abgebrochen";
+                    }
+                    bildRechts = bildRechts.toCanvas(0, 0, s/4, 0);
+                    bildMitte = bildMitte.toCanvas(0, 0, s/4, 0);
+                    bildLinks = bildLinks.toCanvas(0, 0, s/4, 0);
+                    bildMalen(bildLinks, bildMitte, bildRechts, rotationen, x, y, "↗", "Seite "+this.index, nummern);
+                    bildRechts.remove();
+                    bildMitte.remove();
+                    bildLinks.remove();
+                }
+                get nachbarn() {
+                    let nachbarn = [];
+                    for (let i = 0; i < verbindungen.length; i++) {
+                        let index1 = verbindungen[i].index1;
+                        let index2 = verbindungen[i].index2;
+                        let seite1 = verbindungen[i].seite1;
+                        let seite2 = verbindungen[i].seite2;
+                        let differenz = Seite.seiteZuZahl(seite1)-Seite.seiteZuZahl(seite2)+2;
+                        if (index1 == this.index) {
+                            nachbarn.push({index: index2, seite: seite1, rotation:  differenz, nummer: i});
+                        }
+                        if (index2 == this.index) {
+                            nachbarn.push({index: index1, seite: seite2, rotation: -differenz, nummer: i});
+                        }
+                    }
+                    return nachbarn;
+                }
+                
+                static seiteZuPosition(seite) {
+                    let x, y;
+                    switch (seite) {
+                        case "oben":   x = 1.25; y = 0   ; break;
+                        case "unten":  x = 1.25; y = 2.5 ; break;
+                        case "links":  x = 0   ; y = 1.25; break;
+                        case "rechts": x = 2.5 ; y = 1.25; break;
+                    }
+                    return {x: x, y: y};
+                }
+                static seiteZuZahl(seite) {
+                    let zahl;
+                    switch (seite) {
+                        case "oben":   zahl = 0; break;
+                        case "unten":  zahl = 2; break;
+                        case "links":  zahl = 3; break;
+                        case "rechts": zahl = 1; break;
+                    }
+                    return zahl;
+                }
+                static instances = [];
+            }
+            let verbindungen = [];
+            let s = 200;
             canvas.width = s*2;
             canvas.height = s*3;
             canvas_tmp.width = s;
@@ -134,14 +266,14 @@
                 let readers = [];
                 let promises = [];
                 let imgs = [];
-                for (let i = 0; i < 6; i++) {
+                for (let i = 0; i < file.files.length; i++) {
                     readers[i] = new FileReader();
                     promises[i] = new Promise((f) => {readers[i].onload = f;return;});
-                    readers[i].readAsDataURL(file.files[5-i]);
+                    readers[i].readAsDataURL(file.files[file.files.length-i-1]);
                 }
-                for (let i = 0; i < 6; i++) await promises[i];
-                for (let i = 0; i < 6; i++) imgs[i] = await loadImage(readers[i].result);
-                //await new Promise((f) => {setTimeout(f, 0);});
+                for (let i = 0; i < file.files.length; i++) await promises[i];
+                for (let i = 0; i < file.files.length; i++) imgs[i] = await loadImage(readers[i].result);
+                await new Promise((f) => {setTimeout(f, 0);});
                 if (file.files.length == 1) {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     bildMalen(imgs[0], imgs[0], imgs[0], {c: 0, l: 1, r: 1}, 0, 0, "↗", "Vorderseite", ["J", "I", "L", "K"]);
@@ -161,7 +293,73 @@
                     bildMalen(imgs[2], imgs[5], imgs[0], {c: 0, l: 1, r: 1}, 1, 2, "↖", "Unterseite", ["D", "K", "A", "B"]);
                 }
             };
-            vorlageErstellen();
+            //vorlageErstellen();
+            (async () => {
+                let seite1 = new Seite();
+                seite1.bild = await new Bild(file.files[0]);
+                seite1.ausrichtung = "oben";
+                let seite2 = new Seite();
+                seite2.bild = await new Bild(file.files[1]);
+                seite2.ausrichtung = "links";
+                let seite3 = new Seite();
+                seite3.bild = await new Bild(file.files[2]);
+                seite3.ausrichtung = "unten";
+                let seite4 = new Seite();
+                seite4.bild = await new Bild(file.files[3]);
+                seite4.ausrichtung = "rechts";
+                let seite5 = new Seite();
+                seite5.bild = await new Bild(file.files[4]);
+                seite5.ausrichtung = "links";
+                let seite6 = new Seite();
+                seite6.bild = await new Bild(file.files[5]);
+                seite6.ausrichtung = "links";/*
+                seite1.nachbarn.right = seite2;
+                seite2.nachbarn.right = seite3;
+                seite3.nachbarn.right = seite4;
+                seite4.nachbarn.right = seite1;
+                seite4.nachbarn.left = seite3;
+                seite3.nachbarn.left = seite2;
+                seite2.nachbarn.left = seite1;
+                seite1.nachbarn.left = seite4;
+                seite1.nachbarn.top = seite5;
+                seite2.nachbarn.top = seite5;
+                seite3.nachbarn.top = seite5;
+                seite4.nachbarn.top = seite5;
+                seite1.nachbarn.bottom = seite6;
+                seite2.nachbarn.bottom = seite6;
+                seite3.nachbarn.bottom = seite6;
+                seite4.nachbarn.bottom = seite6;
+                seite5.nachbarn.right = seite2;
+                seite5.nachbarn.left = seite4;
+                seite5.nachbarn.top = seite3;
+                seite5.nachbarn.bottom = seite1;
+                seite6.nachbarn.right = seite4;
+                seite6.nachbarn.left = seite2;
+                seite6.nachbarn.top = seite3;
+                seite6.nachbarn.bottom = seite1;
+                seite1.malen();*/
+                verbindungen.push({index1: 0, index2: 1, seite1: "rechts", seite2: "links"});
+                verbindungen.push({index1: 1, index2: 2, seite1: "rechts", seite2: "links"});
+                verbindungen.push({index1: 2, index2: 3, seite1: "rechts", seite2: "links"});
+                verbindungen.push({index1: 3, index2: 0, seite1: "rechts", seite2: "links"});
+                
+                verbindungen.push({index1: 4, index2: 0, seite1: "unten",  seite2: "oben"});
+                verbindungen.push({index1: 4, index2: 1, seite1: "rechts", seite2: "oben"});
+                verbindungen.push({index1: 4, index2: 2, seite1: "oben",   seite2: "oben"});
+                verbindungen.push({index1: 4, index2: 3, seite1: "links",  seite2: "oben"});
+                
+                verbindungen.push({index1: 5, index2: 0, seite1: "unten",  seite2: "unten"});
+                verbindungen.push({index1: 5, index2: 1, seite1: "links",  seite2: "unten"});
+                verbindungen.push({index1: 5, index2: 2, seite1: "oben",   seite2: "unten"});
+                verbindungen.push({index1: 5, index2: 3, seite1: "rechts", seite2: "unten"});
+                
+                seite1.malen2(0, 0);
+                seite2.malen2(1, 0);
+                seite3.malen2(0, 1);
+                seite4.malen2(1, 1);
+                seite5.malen2(0, 2);
+                seite6.malen2(1, 2);
+            })();
         </script>
     </body>
 </html>

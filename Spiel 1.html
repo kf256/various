@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+    </head>
+    <body style="margin: 0px;">
+        <canvas id="canvas" width="1600" height="900" style="position: absolute; top: 0px; left: 0px;">
+        </canvas>
+        <script>
+            let canvas = document.getElementById("canvas");
+            let ctx = canvas.getContext("2d");
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            let size = canvas.height;
+            let magnete = [];
+            for (let i = 0; i < 50; i++) {
+                magnete.push([Math.random()*10, Math.random()]);
+            }
+            let pos = [0.5, 0.5];
+            let speed = [0, 0];
+            let maus = false;
+            document.addEventListener("mousedown", () => maus = true);
+            document.addEventListener("mouseup", () => maus = false);
+            let time = Date.now()/1000;
+            let start = Date.now()/1000;
+            let delay = 0;
+            function redPos() {
+                return (Date.now()/1000-start)/7-1;
+            }
+            function mapRange(value, min1, max1, min2, max2) {
+                value -= min1;
+                value /= max1-min1;
+                value *= max2-min2;
+                value += min2;
+                return value;
+            }
+            function malen() {
+                delay = Date.now()/1000-time;
+                time += delay;
+                let minD = Infinity;
+                let minI = -1;
+                for (let i = 0; i < magnete.length; i++) {
+                    let dx = magnete[i][0]-pos[0];
+                    let dy = magnete[i][1]-pos[1];
+                    let d = Math.hypot(dx, dy);
+                    if (d < minD) {
+                        minD = d;
+                        minI = i;
+                    }
+                }
+                if (minI != -1) {
+                    let dx = magnete[minI][0]-pos[0];
+                    let dy = magnete[minI][1]-pos[1];
+                    let d = Math.hypot(dx, dy);
+                    magnetKollisionBerechnen(minI);
+                    if (maus) {
+                        speed[0] += dx*delay/minD*2;
+                        speed[1] += dy*delay/minD*2;
+                    }
+                }
+                bodenKollisionBerechnen();
+                speed[0] *= 0.7**delay;
+                speed[1] *= 0.7**delay;
+                if (Math.hypot(...speed) > 2) {
+                    let direction = Math.atan2(...speed);
+                    speed[0] = 2*Math.sin(direction);
+                    speed[1] = 2*Math.cos(direction);
+                    console.log("Speed limit");
+                }
+                speed[1] += delay;
+                pos[0] += speed[0]*delay;
+                pos[1] += speed[1]*delay;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (minI != -1) {
+                    ctx.beginPath();
+                    ctx.moveTo(canvas.width/2, pos[1]*size);
+                    ctx.lineTo(magnete[minI][0]*size+canvas.width/2-pos[0]*size, magnete[minI][1]*size);
+                    ctx.lineWidth = maus ? 2 : 0.5;
+                    ctx.stroke();
+                }
+                magneteMalen()
+                rotenBereichMalen();
+                zielMalen();
+                blauenKreisMalen();
+                fortschrittMalen();
+                if (pos[0] > 10-1/40) {
+                    console.log("Gewonnen!");
+                    return;
+                }
+                if (pos[0] < 1/40+redPos()) {
+                    console.log("Verloren!");
+                    return;
+                }
+                window.requestAnimationFrame(malen);
+            }
+            function magnetKollisionBerechnen(minI) {
+                let dx = magnete[minI][0]-pos[0];
+                let dy = magnete[minI][1]-pos[1];
+                let d = Math.hypot(dx, dy);
+                if (d < 1/20) {
+                    let dx2 = magnete[minI][0]-pos[0]-speed[0]*delay;
+                    let dy2 = magnete[minI][1]-pos[1]-speed[1]*delay;
+                    let d2 = Math.hypot(dx2, dy2);
+                    if (d2 <= d) {
+                        let angle = Math.atan2(dy, dx);
+                        let speedAbsolute = Math.hypot(...speed);
+                        let speedAngle = angle*2-Math.atan2(speed[1], speed[0])+Math.PI;
+                        speed[0] = speedAbsolute*Math.cos(speedAngle);
+                        speed[1] = speedAbsolute*Math.sin(speedAngle);
+                        pos[0] = magnete[minI][0]-Math.cos(angle)/20;
+                        pos[1] = magnete[minI][1]-Math.sin(angle)/20;
+                    }
+                }
+            }
+            function bodenKollisionBerechnen() {
+                if (pos[1] > 1-1/40) {
+                    pos[1] = 1-1/40;
+                    speed[1] = -Math.abs(speed[1]);
+                }
+            }
+            function magneteMalen() {
+                for (let i = 0; i < magnete.length; i++) {
+                    ctx.beginPath();
+                    ctx.arc(magnete[i][0]*size+canvas.width/2-pos[0]*size, magnete[i][1]*size, size/40, 0, Math.PI*2);
+                    ctx.fillStyle = "gray";
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            }
+            function rotenBereichMalen() {
+                ctx.beginPath();
+                ctx.rect(-canvas.width+redPos()*size+canvas.width/2-pos[0]*size, 0, canvas.width, canvas.height);
+                ctx.fillStyle = "red";
+                ctx.fill();
+                ctx.closePath();
+            }
+            function zielMalen() {
+                ctx.beginPath();
+                ctx.rect(size*10+canvas.width/2-pos[0]*size, 0, canvas.width, canvas.height);
+                ctx.fillStyle = "green";
+                ctx.fill();
+                ctx.closePath();
+            }
+            function blauenKreisMalen() {
+                ctx.beginPath();
+                ctx.arc(canvas.width/2, pos[1]*size, size/40, 0, Math.PI*2);
+                ctx.fillStyle = "blue";
+                ctx.fill();
+                ctx.closePath();
+            }
+            function fortschrittMalen() {
+                ctx.beginPath();
+                ctx.rect(canvas.width/10, 10, mapRange(pos[0], -1, 10, 0, canvas.width/5*4), 10);
+                ctx.fillStyle = "blue";
+                ctx.fill();
+                ctx.closePath();
+                ctx.beginPath();
+                ctx.rect(canvas.width/10, 10, mapRange(redPos(), -1, 10, 0, canvas.width/5*4), 10);
+                ctx.fillStyle = "red";
+                ctx.fill();
+                ctx.closePath();
+                ctx.beginPath();
+                ctx.rect(canvas.width/10, 10, canvas.width/5*4, 10);
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.closePath();
+            }
+            malen();
+        </script>
+    </body>
+</html>
