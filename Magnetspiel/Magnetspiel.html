@@ -25,17 +25,18 @@
         <script>
             let canvas = document.getElementById("canvas");
             let ctx = canvas.getContext("2d");
-            let levelName = "level1";
+            let levelNr = 0;
             let spielLaufend = false;
+            let klickIgnorieren = false;
             let maus = false;
-            let zustand = "Starten";
+            let zustand = "start";
             let isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
             if (isTouchDevice) {
-                document.addEventListener("touchstart", () => maus = true);
+                document.addEventListener("touchstart", (event) => maus = {x: event.offsetX, y: event.offsetY});
                 document.addEventListener("touchend", () => maus = false);
                 document.addEventListener("touchcancel", () => maus = false);
             } else {
-                document.addEventListener("mousedown", () => maus = true);
+                document.addEventListener("mousedown", (event) => maus = {x: event.offsetX, y: event.offsetY});
                 document.addEventListener("mouseup", () => maus = false);
             }
             let länge, magnete, pos, speed, lava, lavaPos, ausgewaehlterMagnet, time = 0, start, delay;
@@ -107,15 +108,13 @@
                 blauenKreisMalen();
                 fortschrittMalen();
                 if (pos[0] > länge-1/40) {
-                    console.log("Gewonnen!");
                     spielLaufend = false;
-                    zustand = "Gewonnen!";
+                    zustand = "gewonnen";
                 }
                 if (lava) {
                     if (pos[0] < 1/40+lavaPos()) {
-                        console.log("Verloren!");
                         spielLaufend = false;
-                        zustand = "Verloren!";
+                        zustand = "verloren";
                     }
                 }
             }
@@ -231,39 +230,176 @@
                 ctx.stroke();
                 ctx.closePath();
             }
+            function übersichtDaten(n, width, height) {
+                let w = Math.ceil(Math.sqrt(n*width/height/5));
+                let h = Math.ceil(n/w);
+                let w2 = width/w;
+                let h2 = height/h;
+                return {w: w, h: h, w2: w2, h2: h2};
+            }
+            function übersichtMalen(strings, posX, posY, width, height, padding) {
+                let maxLength = 0;
+                for (let i = 0; i < strings.length; i++) {
+                    if (strings[i].length > maxLength) {
+                        maxLength = strings[i].length;
+                    }
+                }
+                let daten = übersichtDaten(strings.length, width, height);
+                for (let i = 0; i < strings.length; i++) {
+                    let x = i%daten.w;
+                    let y = (i-x)/daten.w;
+                    let minX = daten.w2*x+posX+padding;
+                    let minY = daten.h2*y+posY+padding;
+                    let centerX = minX-padding+daten.w2/2;
+                    let centerY = minY-padding+daten.h2/2;
+                    ctx.beginPath();
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.font = daten.w2/maxLength+"px sans-serif";
+                    ctx.fillStyle = "black";
+                    ctx.fillText(strings[i], centerX, centerY);
+                    ctx.closePath();
+                    ctx.beginPath();
+                    ctx.rect(minX, minY, daten.w2-padding*2, daten.h2-padding*2);
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = "black";
+                    ctx.stroke();
+                    ctx.closePath();
+                }
+            }
+            function übersichtKlick(strings, posX, posY, width, height, padding) {
+                if (!maus) return null;
+                if (klickIgnorieren) return null;
+                let daten = übersichtDaten(strings.length, width, height);
+                for (let i = 0; i < strings.length; i++) {
+                    let x = i%daten.w;
+                    let y = (i-x)/daten.w;
+                    let minX = daten.w2*x+posX+padding;
+                    let minY = daten.h2*y+posY+padding;
+                    let maxX = minX+daten.w2-padding*2;
+                    let maxY = minY+daten.h2-padding*2;
+                    if (maus.x < minX) continue;
+                    if (maus.y < minY) continue;
+                    if (maus.x > maxX) continue;
+                    if (maus.y > maxY) continue;
+                    klickIgnorieren = true;
+                    return {index: i, text: strings[i]};
+                }
+                return null;
+            }
+            function levelübersichtMalen() {
+                let strings = [];
+                for (let i = 0; i < level.length; i++) {
+                    strings.push("Level "+(i+1));
+                }
+                übersichtMalen(strings, canvas.width/4, canvas.height/4, canvas.width/2, canvas.height/2, size/50);
+                let klick = übersichtKlick(strings, canvas.width/4, canvas.height/4, canvas.width/2, canvas.height/2, size/50);
+                if (klick) {
+                    levelNr = klick.index;
+                    levelStarten();
+                }
+            }
+            function gewonnenübersichtMalen() {
+                ctx.beginPath();
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.font = canvas.width/10+"px sans-serif";
+                ctx.fillStyle = "black";
+                ctx.fillText("Gewonnen!", canvas.width/2, canvas.height/4);
+                ctx.closePath();
+                let strings = ["zur Levelübersicht", "nochmal spielen", "weiter"];
+                if (levelNr+1 == level.length) strings.pop();
+                übersichtMalen(            strings, canvas.width/4, canvas.height/2, canvas.width/2, canvas.height/4, size/50);
+                let klick = übersichtKlick(strings, canvas.width/4, canvas.height/2, canvas.width/2, canvas.height/4, size/50);
+                if (klick) {
+                    if (klick.index == 0) zustand = "start";
+                    else if (klick.index == 1) levelStarten();
+                    else if (klick.index == 2) {
+                        levelNr++;
+                        levelStarten();
+                    }
+                }
+            }
+            function verlorenübersichtMalen() {
+                ctx.beginPath();
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.font = canvas.width/10+"px sans-serif";
+                ctx.fillStyle = "black";
+                ctx.fillText("Verloren!", canvas.width/2, canvas.height/4);
+                ctx.closePath();
+                let strings = ["zur Levelübersicht", "nochmal versuchen"];
+                if (levelNr+1 == level.length) strings.pop();
+                übersichtMalen(            strings, canvas.width/4, canvas.height/2, canvas.width/2, canvas.height/4, size/50);
+                let klick = übersichtKlick(strings, canvas.width/4, canvas.height/2, canvas.width/2, canvas.height/4, size/50);
+                if (klick) {
+                    if (klick.index == 0) zustand = "start";
+                    else if (klick.index == 1) levelStarten();
+                }
+            }
+            function levelStarten() {
+                zustand = "Spiel";
+                spielLaufend = true;
+                länge = level[levelNr].länge;
+                magnete = level[levelNr].magnete;
+                pos = [0.5, 0.5];
+                speed = [0, 0];
+                time = Date.now()/1000;
+                start = Date.now()/1000;
+                delay = 0;
+                ausgewaehlterMagnet = -1;
+                lava = level[levelNr].lava;
+                lavaPos = () => {
+                    return (Date.now()/1000-start)/100*level[levelNr].lavaSpeed-1;
+                }
+            }
             function aktualisieren() {
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight;
                 size = canvas.height;
+                if (!maus) klickIgnorieren = false;
                 if (spielLaufend) {
                     spielMalen();
                 } else {
-                    ctx.beginPath();
-                    ctx.textAlign = "center";
-                    ctx.textBaseline = "middle";
-                    ctx.font = canvas.width/zustand.length+"px sans-serif";
-                    ctx.fillStyle = "black";
-                    ctx.fillText(zustand, canvas.width/2, canvas.height/2);
-                    ctx.closePath();
+                    if (zustand == "start") {
+                        levelübersichtMalen();
+                    }
+                    if (zustand == "gewonnen") {
+                        gewonnenübersichtMalen();
+                    }
+                    if (zustand == "verloren") {
+                        verlorenübersichtMalen();
+                    }
+                    /*
+                    else {
+                        ctx.beginPath();
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.font = canvas.width/zustand.length+"px sans-serif";
+                        ctx.fillStyle = "black";
+                        ctx.fillText(zustand, canvas.width/2, canvas.height/2);
+                        ctx.closePath();
+                    }
                     if (Date.now()/1000-time > 1) {
                         if (zustand == "Verloren!") zustand = "Nochmal versuchen?";
                         if (zustand == "Gewonnen!") zustand = "Nochmal spielen?";
                         if (maus) {
                             spielLaufend = true;
-                            länge = level[levelName].länge;
-                            magnete = level[levelName].magnete;
+                            länge = level[levelNr].länge;
+                            magnete = level[levelNr].magnete;
                             pos = [0.5, 0.5];
                             speed = [0, 0];
                             time = Date.now()/1000;
                             start = Date.now()/1000;
                             delay = 0;
                             ausgewaehlterMagnet = -1;
-                            lava = level[levelName].lava;
+                            lava = level[levelNr].lava;
                             lavaPos = () => {
-                                return (Date.now()/1000-start)/100*level[levelName].lavaSpeed-1;
+                                return (Date.now()/1000-start)/100*level[levelNr].lavaSpeed-1;
                             }
                         }
                     }
+                    */
                 }
                 window.requestAnimationFrame(aktualisieren);
             }
