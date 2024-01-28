@@ -26,6 +26,7 @@
             let canvas = document.getElementById("canvas");
             let ctx = canvas.getContext("2d");
             let levelNr = 0;
+            let levelFreigeschaltet = 0;
             let spielLaufend = false;
             let klickIgnorieren = false;
             let maus = false;
@@ -110,6 +111,7 @@
                 if (pos[0] > länge-1/40) {
                     spielLaufend = false;
                     zustand = "gewonnen";
+                    if (levelNr+1 < level.length) levelFreigeschaltet = Math.max(levelFreigeschaltet, levelNr+1);
                 }
                 if (lava) {
                     if (pos[0] < 1/40+lavaPos()) {
@@ -289,7 +291,7 @@
             }
             function levelübersichtMalen() {
                 let strings = [];
-                for (let i = 0; i < level.length; i++) {
+                for (let i = 0; i <= levelFreigeschaltet; i++) {
                     strings.push("Level "+(i+1));
                 }
                 übersichtMalen(strings, canvas.width/4, canvas.height/4, canvas.width/2, canvas.height/2, size/50);
