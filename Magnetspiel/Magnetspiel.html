@@ -296,7 +296,7 @@
                 }
                 übersichtMalen(strings, canvas.width/4, canvas.height/4, canvas.width/2, canvas.height/2, size/50);
                 let klick = übersichtKlick(strings, canvas.width/4, canvas.height/4, canvas.width/2, canvas.height/2, size/50);
-                if (klick) {
+                if (klick !== null) {
                     levelNr = klick.index;
                     levelStarten();
                 }
@@ -313,7 +313,7 @@
                 if (levelNr+1 == level.length) strings.pop();
                 übersichtMalen(            strings, canvas.width/4, canvas.height/2, canvas.width/2, canvas.height/4, size/50);
                 let klick = übersichtKlick(strings, canvas.width/4, canvas.height/2, canvas.width/2, canvas.height/4, size/50);
-                if (klick) {
+                if (klick !== null) {
                     if (klick.index == 0) zustand = "start";
                     else if (klick.index == 1) levelStarten();
                     else if (klick.index == 2) {
@@ -333,7 +333,7 @@
                 let strings = ["zur Levelübersicht", "nochmal versuchen"];
                 übersichtMalen(            strings, canvas.width/4, canvas.height/2, canvas.width/2, canvas.height/4, size/50);
                 let klick = übersichtKlick(strings, canvas.width/4, canvas.height/2, canvas.width/2, canvas.height/4, size/50);
-                if (klick) {
+                if (klick !== null) {
                     if (klick.index == 0) zustand = "start";
                     else if (klick.index == 1) levelStarten();
                 }
