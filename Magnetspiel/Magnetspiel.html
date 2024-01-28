@@ -33,7 +33,7 @@
             let zustand = "start";
             let isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
             if (isTouchDevice) {
-                document.addEventListener("touchstart", (event) => maus = {x: event.touches[0].offsetX, y: event.touches[0].offsetY});
+                document.addEventListener("touchstart", (event) => maus = {x: event.touches[0].clientX, y: event.touches[0].clientY});
                 document.addEventListener("touchend", () => maus = false);
                 document.addEventListener("touchcancel", () => maus = false);
             } else {
