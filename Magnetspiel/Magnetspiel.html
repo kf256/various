@@ -110,12 +110,14 @@
                 fortschrittMalen();
                 if (pos[0] > länge-1/40) {
                     spielLaufend = false;
+                    klickIgnorieren = true;
                     zustand = "gewonnen";
                     if (levelNr+1 < level.length) levelFreigeschaltet = Math.max(levelFreigeschaltet, levelNr+1);
                 }
                 if (lava) {
                     if (pos[0] < 1/40+lavaPos()) {
                         spielLaufend = false;
+                        klickIgnorieren = true;
                         zustand = "verloren";
                     }
                 }
