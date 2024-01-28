@@ -37,7 +37,7 @@
                 document.addEventListener("mousedown", () => maus = true);
                 document.addEventListener("mouseup", () => maus = false);
             }
-            let magnete, pos, speed, lavaPos, ausgewaehlterMagnet, time = 0, start, delay;
+            let länge, magnete, pos, speed, lavaPos, ausgewaehlterMagnet, time = 0, start, delay;
             function mapRange(value, min1, max1, min2, max2) {
                 value -= min1;
                 value /= max1-min1;
@@ -105,7 +105,7 @@
                 zielMalen();
                 blauenKreisMalen();
                 fortschrittMalen();
-                if (pos[0] > 10-1/40) {
+                if (pos[0] > länge-1/40) {
                     console.log("Gewonnen!");
                     spielLaufend = false;
                     zustand = "Gewonnen!";
@@ -199,7 +199,7 @@
             }
             function zielMalen() {
                 ctx.beginPath();
-                ctx.rect(size*10+canvas.width/2-pos[0]*size, 0, canvas.width, canvas.height);
+                ctx.rect(size*länge+canvas.width/2-pos[0]*size, 0, canvas.width, canvas.height);
                 ctx.fillStyle = "green";
                 ctx.fill();
                 ctx.closePath();
@@ -213,12 +213,12 @@
             }
             function fortschrittMalen() {
                 ctx.beginPath();
-                ctx.rect(canvas.width/10, 10, mapRange(pos[0], -1, 10, 0, canvas.width/5*4), 10);
+                ctx.rect(canvas.width/10, 10, mapRange(pos[0], -1, länge, 0, canvas.width/5*4), 10);
                 ctx.fillStyle = "blue";
                 ctx.fill();
                 ctx.closePath();
                 ctx.beginPath();
-                ctx.rect(canvas.width/10, 10, mapRange(lavaPos(), -1, 10, 0, canvas.width/5*4), 10);
+                ctx.rect(canvas.width/10, 10, mapRange(lavaPos(), -1, länge, 0, canvas.width/5*4), 10);
                 ctx.fillStyle = "red";
                 ctx.fill();
                 ctx.closePath();
@@ -238,7 +238,7 @@
                     ctx.beginPath();
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
-                    ctx.font = size/zustand.length+"px sans-serif";
+                    ctx.font = canvas.width/zustand.length+"px sans-serif";
                     ctx.fillStyle = "black";
                     ctx.fillText(zustand, canvas.width/2, canvas.height/2);
                     ctx.closePath();
@@ -247,9 +247,10 @@
                         if (zustand == "Gewonnen!") zustand = "Nochmal spielen?";
                         if (maus) {
                             spielLaufend = true;
+                            länge = 10;
                             magnete = [];
                             for (let i = 0; i < 50; i++) {
-                                magnete.push([Math.random()*10, Math.random()]);
+                                magnete.push([Math.random()*länge, Math.random()]);
                             }
                             pos = [0.5, 0.5];
                             speed = [0, 0];
