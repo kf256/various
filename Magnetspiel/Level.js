@@ -56,6 +56,19 @@ level.push({
     ]
 });
 level.push({
+    länge: 5,
+    lava: true,
+    lavaSpeed: 10,
+    magnete: [
+    [0.3, 0.9],
+    [1.5, 0.95],
+    [2.5, 0.87],
+    [2.5, 0.95],
+    [3.5, 0.95],
+    [4.5, 0.9]
+    ]
+});
+level.push({
     länge: 6,
     lava: true,
     lavaSpeed: 7,
