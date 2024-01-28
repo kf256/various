@@ -37,7 +37,7 @@
                 document.addEventListener("mousedown", () => maus = true);
                 document.addEventListener("mouseup", () => maus = false);
             }
-            let länge, magnete, pos, speed, lavaPos, ausgewaehlterMagnet, time = 0, start, delay;
+            let länge, magnete, pos, speed, lava, lavaPos, ausgewaehlterMagnet, time = 0, start, delay;
             function mapRange(value, min1, max1, min2, max2) {
                 value -= min1;
                 value /= max1-min1;
@@ -101,7 +101,7 @@
                     ctx.stroke();
                 }
                 magneteMalen()
-                lavaMalen();
+                if (lava) lavaMalen();
                 zielMalen();
                 blauenKreisMalen();
                 fortschrittMalen();
@@ -110,10 +110,12 @@
                     spielLaufend = false;
                     zustand = "Gewonnen!";
                 }
-                if (pos[0] < 1/40+lavaPos()) {
-                    console.log("Verloren!");
-                    spielLaufend = false;
-                    zustand = "Verloren!";
+                if (lava) {
+                    if (pos[0] < 1/40+lavaPos()) {
+                        console.log("Verloren!");
+                        spielLaufend = false;
+                        zustand = "Verloren!";
+                    }
                 }
             }
             function magnetKollisionBerechnen(minI) {
@@ -247,19 +249,17 @@
                         if (zustand == "Gewonnen!") zustand = "Nochmal spielen?";
                         if (maus) {
                             spielLaufend = true;
-                            länge = 10;
-                            magnete = [];
-                            for (let i = 0; i < 50; i++) {
-                                magnete.push([Math.random()*länge, Math.random()]);
-                            }
+                            länge = level.level1.länge;
+                            magnete = level.level1.magnete;
                             pos = [0.5, 0.5];
                             speed = [0, 0];
                             time = Date.now()/1000;
                             start = Date.now()/1000;
                             delay = 0;
                             ausgewaehlterMagnet = -1;
-                            lavaPos = function() {
-                                return (Date.now()/1000-start)/7-1;
+                            lava = level.level1.lava;
+                            lavaPos = () => {
+                                return (Date.now()/1000-start)/100*level.level1.lavaSpeed-1;
                             }
                         }
                     }
