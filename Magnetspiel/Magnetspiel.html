@@ -329,7 +329,6 @@
                 ctx.fillText("Verloren!", canvas.width/2, canvas.height/4);
                 ctx.closePath();
                 let strings = ["zur Levelübersicht", "nochmal versuchen"];
-                if (levelNr+1 == level.length) strings.pop();
                 übersichtMalen(            strings, canvas.width/4, canvas.height/2, canvas.width/2, canvas.height/4, size/50);
                 let klick = übersichtKlick(strings, canvas.width/4, canvas.height/2, canvas.width/2, canvas.height/4, size/50);
                 if (klick) {
