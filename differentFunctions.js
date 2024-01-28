@@ -92,8 +92,7 @@ Math.findPrime = function(digits, precision) {
 };
 Math.rsaKeys = function(digits, precision) {
     let p = Math.findPrime(digits, precision);
-    let qDigits = Math.floor(p.toString(2).length*(Math.random()*0.1+0.8));
-    let q = Math.findPrime(qDigits, precision);
+    let q = Math.findPrime(digits, precision);
     let N = p*q;
     let phi_N = (p-1n)*(q-1n);
     let e = 0n;
