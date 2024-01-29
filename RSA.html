@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <div id="decrypt">
+            <h1>Verschlüsseln</h1>
+            <label for="key1in">Schlüssel 1:</label>
+            <input type="number" id="key1in"></input>
+            <br>
+            <br>
+            <label for="key2in">Schlüssel 2:</label>
+            <input type="number" id="key2in"></input>
+            <br>
+            <br>
+            <textarea id="textinput">
+            </textarea>
+            <br>
+            <br>
+            <tt id="cryptooutput">
+            </tt>
+        </div>
+        <hr>
+        <div id="encrypt">
+            <h1>Entschlüsseln</h1>
+            <p>
+                Schlüssel 1: <b id="key1out"></b>
+            </p>
+            <p>
+                Schlüssel 2: <b id="key2out"></b>
+            </p>
+            <textarea id="cryptoinput">
+            </textarea>
+            <br>
+            <br>
+            <tt id="textoutput">
+            </tt>
+        </div>
+        <script src="https://kf256.github.io/various/differentFunctions.js">
+        </script>
+        <script>
+            function string2numbers(string) {
+                let array = new TextEncoder().encode(string);
+                let data = new Array(array.length);
+                for (let i = 0; i < array.length; i++) {
+                            data[i] = array[i].toString(2);
+                            while(data[i].length < 8) data[i] = "0"+data[i];
+                }
+                let numbers = [];
+                for (let i = 0; i < data.length; i++) {
+                    let startBit = data[i].indexOf("0")+1;
+                    let number = data[i].slice(startBit, 8);
+                    if (data[i].slice(0, 2) == "10") {
+                        numbers[numbers.length-1] <<= number.length;
+                        numbers[numbers.length-1] += parseInt(number, 2);
+                    } else {
+                        numbers.push(parseInt(number, 2));
+                    }
+                }
+                return numbers;
+            }
+        </script>
+        <script>
+            let keysDe = {N: 0};
+            for (let d = 1; keysDe.N < 1048576; d++) keysDe = Math.rsaKeys(d, 10);
+            let cryptoCharacters = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            
+            
+            let key1in = document.getElementById("key1in");
+            let key2in = document.getElementById("key2in");
+            let textinput = document.getElementById("textinput");
+            let cryptooutput = document.getElementById("cryptooutput");
+            
+            key1in.value = keysDe.e;
+            key2in.value = keysDe.N;
+            textinput.value = "";
+            
+            textinput.addEventListener("input", encrypt);
+            
+            function encrypt() {
+                let keysEn = {};
+                keysEn.e = BigInt(key1in.value);
+                keysEn.N = BigInt(key2in.value);
+                
+                let cryptoNumbers = string2numbers(textinput.value);
+                cryptoNumbers = cryptoNumbers.map(n => BigInt(n));
+                let numbers = Math.rsaEncrypt(cryptoNumbers, keysEn);
+                let bigInt = 0n;
+                numbers.map(n => {
+                    bigInt *= keysEn.N;
+                    bigInt += n;
+                });
+                let characters = [];
+                while (bigInt != 0n) {
+                    let len = BigInt(cryptoCharacters.length);
+                    characters.unshift(cryptoCharacters[bigInt%len]);
+                    bigInt /= len;
+                }
+                cryptooutput.innerHTML = characters.join("");
+            }
+            
+            
+            let key1out = document.getElementById("key1out");
+            let key2out = document.getElementById("key2out");
+            let cryptoinput = document.getElementById("cryptoinput");
+            let textoutput = document.getElementById("textoutput");
+            
+            key1out.innerHTML = keysDe.e;
+            key2out.innerHTML = keysDe.N;
+            cryptoinput.value = "";
+            
+            cryptoinput.addEventListener("input", decrypt);
+            
+            function decrypt() {
+                let characters = cryptoinput.value.split("");
+                let bigInt = 0n;
+                characters.map(n => {
+                    let len = BigInt(cryptoCharacters.length);
+                    bigInt *= len;
+                    bigInt += BigInt(cryptoCharacters.indexOf(n));
+                });
+                let numbers = [];
+                while (bigInt != 0n) {
+                    numbers.unshift(bigInt%keysDe.N);
+                    bigInt /= keysDe.N;
+                }
+                let cryptoNumbers = Math.rsaDecrypt(numbers, keysDe);
+                cryptoNumbers = cryptoNumbers.map(n => `&#${Number(n)};`);
+                let string = cryptoNumbers.join("");
+                string = string.replace(/&#10;/g, "<br>");
+                string = string.replace(/&#32;/g, "&nbsp;");
+                textoutput.innerHTML = string;
+            }
+        </script>
+    </body>
+</html>
