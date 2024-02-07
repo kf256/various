@@ -4,13 +4,13 @@
         <meta charset="utf-8">
     </head>
     <body>
-        <div id="decrypt">
-            <h1>Verschlüsseln</h1>
-            <label for="key1in">Schlüssel 1:</label>
+        <div>
+            <h1 id="encryptText">Encrypt</h1>
+            <label id="key1in_label" for="key1in">key 1:</label>
             <input type="number" id="key1in"></input>
             <br>
             <br>
-            <label for="key2in">Schlüssel 2:</label>
+            <label id="key2in_label" for="key2in">key 2:</label>
             <input type="number" id="key2in"></input>
             <br>
             <br>
@@ -22,13 +22,13 @@
             </tt>
         </div>
         <hr>
-        <div id="encrypt">
-            <h1>Entschlüsseln</h1>
+        <div>
+            <h1 id="decryptText">Decrypt</h1>
             <p>
-                Schlüssel 1: <b id="key1out"></b>
+                key 1: <b id="key1out"></b>
             </p>
             <p>
-                Schlüssel 2: <b id="key2out"></b>
+                key 2: <b id="key2out"></b>
             </p>
             <textarea id="cryptoinput">
             </textarea>
@@ -62,6 +62,22 @@
             }
         </script>
         <script>
+            let languages = {};
+            languages.en = {encryptText: "Encrypt", decryptText: "Decrypt", key1in_label: "key 1:", key2in_label: "key 2:"};
+            languages.es = {encryptText: "codificar", decryptText: "descodificar", key1in_label: "clave 1:", key2in_label: "clave 2:"};
+            languages.de = {encryptText: "Verschlüsseln", decryptText: "Entschlüsseln", key1in_label: "Schlüssel 1:", key2in_label: "Schlüssel 2:"};
+            function useLanguage(language) {
+                if (languages[language] == undefined) language = language.slice(0, 2);
+                if (languages[language] == undefined) return;
+                let ids = Object.keys(languages[language]);
+                for (let i = 0; i < ids.length; i++) {
+                    document.getElementById(ids[i]).innerHTML = languages[language][ids[i]];
+                }
+            }
+            for (let i = navigator.languages.length-1; i >= 0; i--) {
+                useLanguage(navigator.languages[i]);
+            }
+            
             let keysDe = {N: 0};
             for (let d = 1; keysDe.N < 1048576; d++) keysDe = Math.rsaKeys(d, 10);
             let cryptoCharacters = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
