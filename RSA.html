@@ -25,10 +25,10 @@
         <div>
             <h1 id="decryptText">Decrypt</h1>
             <p>
-                key 1: <b id="key1out"></b>
+                <span id="key1out_label">key 1:</span> <b id="key1out"></b>
             </p>
             <p>
-                key 2: <b id="key2out"></b>
+                <span id="key2out_label">key 2:</span> <b id="key2out"></b>
             </p>
             <textarea id="cryptoinput">
             </textarea>
@@ -44,8 +44,8 @@
                 let array = new TextEncoder().encode(string);
                 let data = new Array(array.length);
                 for (let i = 0; i < array.length; i++) {
-                            data[i] = array[i].toString(2);
-                            while(data[i].length < 8) data[i] = "0"+data[i];
+                    data[i] = array[i].toString(2);
+                    while(data[i].length < 8) data[i] = "0"+data[i];
                 }
                 let numbers = [];
                 for (let i = 0; i < data.length; i++) {
@@ -63,9 +63,9 @@
         </script>
         <script>
             let languages = {};
-            languages.en = {encryptText: "Encrypt", decryptText: "Decrypt", key1in_label: "key 1:", key2in_label: "key 2:"};
-            languages.es = {encryptText: "codificar", decryptText: "descodificar", key1in_label: "clave 1:", key2in_label: "clave 2:"};
-            languages.de = {encryptText: "Verschlüsseln", decryptText: "Entschlüsseln", key1in_label: "Schlüssel 1:", key2in_label: "Schlüssel 2:"};
+            languages.en = {encryptText: "Encrypt", decryptText: "Decrypt", key1in_label: "key 1:", key2in_label: "key 2:", key1out_label: "key 1:", key2out_label: "key 2:"};
+            languages.es = {encryptText: "codificar", decryptText: "descodificar", key1in_label: "clave 1:", key2in_label: "clave 2:", key1out_label: "clave 1:", key2out_label: "clave 2:"};
+            languages.de = {encryptText: "Verschlüsseln", decryptText: "Entschlüsseln", key1in_label: "Schlüssel 1:", key2in_label: "Schlüssel 2:", key1out_label: "Schlüssel 1:", key2out_label: "Schlüssel 2:"};
             function useLanguage(language) {
                 if (languages[language] == undefined) language = language.slice(0, 2);
                 if (languages[language] == undefined) return;
@@ -79,7 +79,7 @@
             }
             
             let keysDe = {N: 0};
-            for (let d = 1; keysDe.N < 1048576; d++) keysDe = Math.rsaKeys(d, 10);
+            for (let d = 1; keysDe.N < 1048576n; d++) keysDe = Math.rsaKeys(d, 10);
             let cryptoCharacters = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
             
             
