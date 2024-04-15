@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>
+            diode and solar cell
+        </title>
+    </head>
+    <body>
+        <canvas id="canvas" width="1600" height="400" style="position: absolute; top: 10px; border: 2px solid black;">
+        </canvas>
+        <form style="position: fixed; bottom: 10px;">
+            <label for="speed">speed:</label>
+            <input id="speed" type="range" min="0" max="10" step="0.01" value="0" style="width: 500px;"></input>
+            <br><br>
+            <input id="recombination" type="checkbox"></input>
+            <label for="recombination">recombination</label>
+            <br><br>
+            <input id="attraction" type="checkbox"></input>
+            <label for="attraction">attraction</label>
+            <br><br>
+            <button type="button" onclick="reverseCurrent();">reverse current</button>
+            <button type="button" onclick="forwardCurrent();">forward current</button>
+            <br><br>
+            <button type="button" onclick="createPhoton();">create photon</button>
+        </form>
+        <script>
+            //"use strict";
+            
+            let canvas = document.getElementById("canvas");
+            let ctx = canvas.getContext("2d");
+            
+            let speedElm = document.getElementById("speed");
+            let recombinationElm = document.getElementById("recombination");
+            let attractionElm = document.getElementById("attraction");
+            
+            let start = Date.now();
+            let drawn = false;
+            
+            class Particle {
+                constructor(x, y, fixed, charge) {
+                    this.index = Particle.instances.length;
+                    Particle.instances.push(this);
+                    
+                    this.x = x;
+                    this.y = y;
+                    this.charge = charge;
+                    this.fixed = fixed;
+                    this.time = Date.now();
+                    this.dt = 0;
+                    
+                    if (this.fixed) return;
+                    this.dx = Math.random()*2-1;
+                    this.dy = Math.random()*2-1;
+                }
+                update() {
+                    let delay = Date.now()-this.time;
+                    this.dt = delay*(2**speedElm.value-1)/1000;
+                    if (this.dt == 0) return;
+                    if (this.dt > 10) this.dt = 10;
+                    if (this.dt < 1 && delay < 100) return;
+                    this.time += delay;
+                    
+                    if (!this.fixed) {
+                        this.x += this.dx*this.dt;
+                        this.y += this.dy*this.dt;
+                        if (this.x < 10 && this.dx < 0) {
+                            this.x = 10;
+                            this.dx *= -1;
+                        }
+                        if (this.y < 10 && this.dy < 0) {
+                            this.y = 10;
+                            this.dy *= -1;
+                        }
+                        if (this.x > canvas.width-10 && this.dx > 0) {
+                            this.x = canvas.width-10;
+                            this.dx *= -1;
+                        }
+                        if (this.y > canvas.height-10 && this.dy > 0) {
+                            this.y = canvas.height-10;
+                            this.dy *= -1;
+                        }
+                        
+                        drawn = false;
+                    }
+                    
+                    this.calculateCollisions();
+                    this.calculateAttraction();
+                }
+                calculateCollisions() {
+                    for (let i = this.index+1; i < Particle.instances.length; i++) {
+                        let t1 = this;
+                        let t2 = Particle.instances[i];
+                        if (t1.fixed && t2.fixed) continue;
+                        let dist = Math.hypot(t2.y-t1.y, t2.x-t1.x);
+                        let angle = Math.atan2(t2.y-t1.y, t2.x-t1.x);
+                        if (dist > 20) continue;
+                        let speed1 = 0;
+                        let speed2 = 0;
+                        if (!t1.fixed) speed1 = t1.dx*Math.cos(-angle)-t1.dy*Math.sin(-angle);
+                        if (!t2.fixed) speed2 = t2.dx*Math.cos(-angle)-t2.dy*Math.sin(-angle);
+                        let speed = speed1-speed2;
+                        if (speed < 0) continue;
+                        let speedX = Math.cos(angle)*speed;
+                        let speedY = Math.sin(angle)*speed;
+                        if (!t1.fixed && !t2.fixed) {
+                            t1.dx -= speedX;
+                            t1.dy -= speedY;
+                            t2.dx += speedX;
+                            t2.dy += speedY;
+                        }
+                        if (!t1.fixed && t2.fixed) {
+                            t1.dx -= speedX*2;
+                            t1.dy -= speedY*2;
+                        }
+                        if (t1.fixed && !t2.fixed) {
+                            t2.dx += speedX*2;
+                            t2.dy += speedY*2;
+                        }
+                        
+                        let posX = Math.cos(angle)*(20-dist)/2;
+                        let posY = Math.sin(angle)*(20-dist)/2;
+                        if (!t1.fixed && !t2.fixed) {
+                            t1.x -= posX;
+                            t1.y -= posY;
+                            t2.x += posX;
+                            t2.y += posY;
+                        }
+                        if (!t1.fixed && t2.fixed) {
+                            t1.x -= posX*2;
+                            t1.y -= posY*2;
+                        }
+                        if (t1.fixed && !t2.fixed) {
+                            t2.x += posX*2;
+                            t2.y += posY*2;
+                        }
+                        
+                        drawn = false;
+                    }
+                }
+                calculateAttraction() {
+                    if (!attractionElm.checked) return;
+                    if (this.fixed) return;
+                    
+                    let speedX = 0;
+                    let speedY = 0;
+                    
+                    for (let i = 0; i < Particle.instances.length; i++) {
+                        if (i == this.index) continue;
+                        let t = Particle.instances[i];
+                        let dist = Math.hypot(t.y-this.y, t.x-this.x);
+                        let angle = Math.atan2(t.y-this.y, t.x-this.x);
+                        let factor = t.charge/dist;
+                        speedX += Math.cos(angle)*factor;
+                        speedY += Math.sin(angle)*factor;
+                    }
+                    
+                    this.dx -= speedX*this.charge*this.dt/10;
+                    this.dy -= speedY*this.charge*this.dt/10;
+                    
+                    drawn = false;
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 10, 0, Math.PI*2);
+                    ctx.fillStyle = chargeToColor(this.charge);
+                    ctx.fill();
+                    ctx.closePath();
+                    if (this.fixed) {
+                        ctx.beginPath();
+                        ctx.fillStyle = "white";
+                        ctx.fillRect(this.x-5, this.y-5, 10, 10);
+                        ctx.closePath();
+                    }
+                }
+                remove() {
+                    Particle.instances = Particle.instances.slice(0, this.index).concat(Particle.instances.slice(this.index+1));
+                    for (let i = this.index; i < Particle.instances.length; i++) Particle.instances[i].index--;
+                }
+                
+                static instances = [];
+                static update() {
+                    for (let i = 0; i < Particle.instances.length; i++) Particle.instances[i].update();
+                }
+                static draw() {
+                    for (let i = 0; i < Particle.instances.length; i++) Particle.instances[i].draw();
+                }
+            }
+            class RecombinationDot {
+                constructor(x, y) {
+                    this.index = RecombinationDot.instances.length;
+                    RecombinationDot.instances.push(this);
+                    this.time = Date.now();
+                    this.progress = 0;
+                    this.x = x;
+                    this.y = y;
+                }
+                draw() {
+                    this.dt = Date.now()-this.time;
+                    this.time += this.dt;
+                    this.dt *= (2**speedElm.value-1)/1000;
+                    this.progress += this.dt/50;
+                    
+                    let width = this.progress-this.progress**2;
+                    width *= 20;
+                    if (width < 0) {
+                        this.remove();
+                        return;
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.lineWidth = width;
+                    ctx.arc(this.x, this.y, this.progress*20, 0, Math.PI*2);
+                    ctx.strokeStyle = "yellow";
+                    ctx.stroke();
+                    ctx.closePath();
+                    
+                    setTimeout(() => drawn = false, 10000/(2**speedElm.value-1));
+                }
+                remove() {
+                    RecombinationDot.instances = RecombinationDot.instances.slice(0, this.index).concat(RecombinationDot.instances.slice(this.index+1));
+                    for (let i = this.index; i < RecombinationDot.instances.length; i++) RecombinationDot.instances[i].index--;
+                }
+                
+                static instances = [];
+                static draw() {
+                    for (let i = 0; i < RecombinationDot.instances.length; i++) RecombinationDot.instances[i].draw();
+                }
+            }
+            class Photon {
+                constructor() {
+                    this.index = Photon.instances.length;
+                    Photon.instances.push(this);
+                    this.time = Date.now();
+                    this.progress = 0;
+                }
+                draw() {
+                    this.dt = Date.now()-this.time;
+                    this.time += this.dt;
+                    this.dt *= (2**speedElm.value-1)/1000;
+                    this.progress += this.dt/5;
+                    
+                    let posY = this.progress-20-canvas.height/2;
+                    let posX = -posY;
+                    if (posY > 0) {
+                        let p1 = new Particle(canvas.width/2, canvas.height/2-11, false, 1);
+                        let p2 = new Particle(canvas.width/2, canvas.height/2+11, false, -1);
+                        p1.dx = p2.dx = 0;
+                        p1.dy = -0.2;
+                        p2.dy = 0.2;
+                        this.remove();
+                        return;
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.arc(canvas.width/2+posX, canvas.height/2+posY, 20, 0, Math.PI*2);
+                    ctx.fillStyle = "#ff08";
+                    ctx.fill();
+                    ctx.closePath();
+                    ctx.beginPath();
+                    ctx.arc(canvas.width/2+posX, canvas.height/2+posY, 12, 0, Math.PI*2);
+                    ctx.fillStyle = "#ff08";
+                    ctx.fill();
+                    ctx.closePath();
+                    ctx.beginPath();
+                    ctx.arc(canvas.width/2+posX, canvas.height/2+posY, 5, 0, Math.PI*2);
+                    ctx.fillStyle = "#fff8";
+                    ctx.fill();
+                    ctx.closePath();
+                    
+                    setTimeout(() => drawn = false, 10000/(2**speedElm.value-1));
+                }
+                remove() {
+                    Photon.instances = Photon.instances.slice(0, this.index).concat(Photon.instances.slice(this.index+1));
+                    for (let i = this.index; i < Photon.instances.length; i++) Photon.instances[i].index--;
+                }
+                
+                static instances = [];
+                static draw() {
+                    for (let i = 0; i < Photon.instances.length; i++) Photon.instances[i].draw();
+                }
+            }
+            
+            for (let x = 250; x < canvas.width/2; x += 100) {
+                for (let y = 50; y < canvas.height; y += 100) {
+                    new Particle(x, y, true, -1);
+                    new Particle(canvas.width-x, y, true, 1);
+                    let angle = Math.random()*Math.PI*2;
+                    let dx = 35*Math.cos(angle);
+                    let dy = 35*Math.sin(angle);
+                    new Particle(x+dx, y+dy, false, 1);
+                    new Particle(canvas.width-x-dx, y+dy, false, -1);
+                }
+            }
+            setInterval(function() {
+                if (speedElm.value == 0) return;
+                if (recombinationElm.checked) {
+                    for (let i = 0; i < Particle.instances.length; i++) {
+                        for (let j = i+1; j < Particle.instances.length; j++) {
+                            let t1 = Particle.instances[i];
+                            let t2 = Particle.instances[j];
+                            
+                            if (t1.fixed || t2.fixed) continue;
+                            if (t1.charge+t2.charge) continue;
+                            
+                            let dist = Math.hypot(t2.y-t1.y, t2.x-t1.x);
+                            
+                            if (dist > 21) continue;
+                            
+                            t1.remove();
+                            t2.remove();
+                            
+                            new RecombinationDot((t1.x+t2.x)/2, (t1.y+t2.y)/2);
+                            
+                            drawn = false;
+                            
+                            i--;
+                            break;
+                        }
+                    }
+                }
+                Particle.update();
+            }, 0);
+            setInterval(function() {
+                if (drawn) return;
+                
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+                
+                for (let x = 0; x <= canvas.width; x += 10) {
+                    let sum = 0;
+                    for (let i = 0; i < Particle.instances.length; i++) {
+                        let charge = Particle.instances[i].charge;
+                        let dist = Math.hypot(x-Particle.instances[i].x, 50);
+                        sum += charge/dist;
+                    }
+                    let charge = Math.tanh(sum*5);
+                    let color = chargeToColor(charge, 0.5);
+                    gradient.addColorStop(x/canvas.width, color);
+                }
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                Particle.draw();
+                RecombinationDot.draw();
+                Photon.draw();
+                
+                drawn = true;
+            }, 50);
+            function chargeToColor(charge, intensity = 1) {
+                let H = (charge > 0) ? 0 : 240;
+                let S = Math.abs(charge)*100;
+                let L = 100-intensity*50;
+                return `HSL(${H}, ${S}%, ${L}%)`;
+            }
+            function forwardCurrent() {
+                new Particle(20, canvas.height/2, false, 1);
+                new Particle(canvas.width-20, canvas.height/2, false, -1);
+                drawn = false;
+            }
+            function reverseCurrent() {
+                new Particle(20, canvas.height/2, false, -1);
+                new Particle(canvas.width-20, canvas.height/2, false, 1);
+                drawn = false;
+            }
+            function createPhoton() {
+                new Photon();
+                drawn = false;
+            }
+        </script>
+    </body>
+</html>
