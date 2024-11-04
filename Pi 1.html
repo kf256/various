@@ -5,7 +5,9 @@
     </head>
     <body>
         <tt id="text"></tt>
+        <br>
         <button onclick="start()">start</button>
+        <br>
         <script>
             const textElm = document.getElementById("text");
             
@@ -63,6 +65,15 @@
                     });
                     document.body.appendChild(buttonI);
                 }
+
+                const buttonDel = document.createElement("button");
+                buttonDel.innerHTML = i;
+                buttonDel.onclick = (() => {
+                    if (cursor === 0) return;
+                    cursor--;
+                    document.getElementById(cursor).innerHTML = "&nbsp;";
+                });
+                document.body.appendChild(buttonI);
             }
         </script>
     </body>
