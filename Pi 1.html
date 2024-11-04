@@ -33,6 +33,8 @@
 
             const progress = 0;
 
+            const cursor;
+
             function start() {
                 const pos = progress+2;
 
@@ -42,12 +44,25 @@
                 else text += "... " + pi.slice(pos-10, pos);
 
                 for (let i = 0; i < 20; i++) {
-                    text += '<span id="' + i + '"> </span>';
+                    text += '<span id="' + i + '">&nbsp;</span>';
                 }
 
                 text += pi.slice(pos+20, pos+30) + " ...";
 
                 textElm.innerHTML = text;
+
+                cursor = 0;
+                
+                for (let i = 0; i < 10; i++) {
+                    const buttonI = document.createElement("button");
+                    buttonI.innerHTML = i;
+                    buttonI.onclick = () => {
+                        if (cursor === 20) return;
+                        document.getElementById(cursor).innerHTML = i;
+                        cursor++;
+                    }
+                    document.body.appendChild(buttonI);
+                }
             }
         </script>
     </body>
