@@ -2,13 +2,54 @@
 <html>
     <head>
         <meta charset="utf-8">
+        <style>
+            #text {
+                font-size: 30px;
+            }
+            
+            #startButton {
+                font-size: 50px;
+            }
+            
+            #input td {
+                width: 100px;
+                height: 100px;
+                background-color: gray;
+                text-align: center;
+                font-size: 100px;
+            }
+        </style>
     </head>
     <body>
         <tt id="text"></tt>
         <br>
-        <button onclick="start()">start</button>
-        <br>
+        <button id="startButton" onclick="start()">start</button>
+        <table id="input">
+            <tr>
+                <td onpointerdown="input(1)">1</td>
+                <td onpointerdown="input(2)">2</td>
+                <td onpointerdown="input(3)">3</td>
+            </tr>
+            <tr>
+                <td onpointerdown="input(4)">4</td>
+                <td onpointerdown="input(5)">5</td>
+                <td onpointerdown="input(6)">6</td>
+            </tr>
+            <tr>
+                <td onpointerdown="input(7)">7</td>
+                <td onpointerdown="input(8)">8</td>
+                <td onpointerdown="input(9)">9</td>
+            </tr>
+            <tr>
+                <td onpointerdown="input('del')">←</td>
+                <td onpointerdown="input(0)">0</td>
+                <td onpointerdown="input('enter')">√</td>
+            </tr>
+        </table>
         <script>
+            document.getElementById("text").style.display = "none";
+            document.getElementById("input").style.display = "none";
+            
             const textElm = document.getElementById("text");
             
             const pi = `3.
@@ -32,48 +73,96 @@
 7101000313 7838752886 5875332083 8142061717 7669147303
 5982534904 2875546873 1159562863 8823537875 9375195778 
 1857780532 1712268066 1300192787 6611195909 2164201989`.replace(/ /g, "").replace(/\n/g, "");
-
-            const progress = 0;
-
+            
+            let progress = 0;
+            
             let cursor;
-
+            
             function start() {
+                document.getElementById("text").style.display = "";
+                document.getElementById("startButton").style.display = "none";
+                document.getElementById("input").style.display = "";
+                
                 const pos = progress+2;
-
+                
                 let text = "";
-
+                
                 if (pos <= 10) text += pi.slice(0, pos);
                 else text += "... " + pi.slice(pos-10, pos);
-
-                for (let i = 0; i < 20; i++) {
-                    text += '<span id="' + i + '">&nbsp;</span>';
-                }
-
-                text += pi.slice(pos+20, pos+30) + " ...";
-
-                textElm.innerHTML = text;
-
-                cursor = 0;
                 
-                for (let i = 0; i < 10; i++) {
-                    const buttonI = document.createElement("button");
-                    buttonI.innerHTML = i;
-                    buttonI.onclick = (() => {
-                        if (cursor === 20) return;
-                        document.getElementById(cursor).innerHTML = i;
-                        cursor++;
-                    });
-                    document.body.appendChild(buttonI);
+                text += " ";
+                
+                for (let i = 0; i < 20; i++) {
+                    if (i === 10) text += " ";
+                    text += '<span id="' + i + '" style="outline: 1px solid gray;">&nbsp;</span>';
                 }
-
-                const buttonDel = document.createElement("button");
-                buttonDel.innerHTML = "del";
-                buttonDel.onclick = (() => {
+                
+                text += " ";
+                
+                text += pi.slice(pos+20, pos+30) + " ...";
+                
+                textElm.innerHTML = text;
+                
+                cursor = 0;
+            }
+            
+            function input(button) {
+                if (typeof button === "number") {
+                    if (cursor === 20) return;
+                    document.getElementById(cursor).innerHTML = button;
+                    cursor++;
+                } else if (button === "del") {
                     if (cursor === 0) return;
                     cursor--;
                     document.getElementById(cursor).innerHTML = "&nbsp;";
-                });
-                document.body.appendChild(buttonDel);
+                } else if (button === "enter") {
+                    if (cursor !== 20) return;
+                    check();
+                }
+            }
+            
+            function check() {
+                document.getElementById("startButton").style.display = "";
+                document.getElementById("input").style.display = "none";
+                
+                let solution = "";
+                
+                const pos = progress+2;
+                
+                if (pos <= 10) solution += pi.slice(0, pos);
+                else solution += "... " + pi.slice(pos-10, pos);
+                
+                for (let i = 0; i < 30; i += 10) solution += " " + pi.slice(pos+i, pos+i+10);
+                
+                solution += " ...";
+                
+                textElm.innerHTML += "<br>" + solution;
+                
+                let result = [];
+                
+                for (let i = 0; i < 20; i++) {
+                    const elm = document.getElementById(i);
+                    const correct = (elm.innerHTML === pi[pos+i]);
+                    elm.style.backgroundColor = correct ? "green" : "red";
+                    result.push(correct);
+                }
+                
+                let mistakes = 0;
+                for (let i = 0; i < 20; i++) {
+                    if (!result[i]) mistakes ++;
+                }
+                console.log(100-mistakes*5+"% correct");
+                
+                let mistakeInFirst10 = false;
+                for (let i = 0; i < 10; i++) {
+                    if (!result[i]) mistakeInFirst10 = true;
+                }
+                
+                if (mistakeInFirst10) {
+                    if (progress > 0) progress -= 10;
+                } else if (mistakes === 0) {
+                    progress += 10;
+                }
             }
         </script>
     </body>
