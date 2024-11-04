@@ -33,8 +33,6 @@
 
             const progress = 0;
 
-            textElm.onclick = start();
-
             function start() {
                 const pos = progress+2;
 
@@ -48,6 +46,8 @@
                 }
 
                 text += pi.slice(pos+20, pos+30) + " ...";
+
+                textElm.innerHTML = text;
             }
         </script>
     </body>
