@@ -56,11 +56,11 @@
                 for (let i = 0; i < 10; i++) {
                     const buttonI = document.createElement("button");
                     buttonI.innerHTML = i;
-                    buttonI.onclick = () => {
+                    buttonI.onclick = (() => {
                         if (cursor === 20) return;
                         document.getElementById(cursor).innerHTML = i;
                         cursor++;
-                    }
+                    });
                     document.body.appendChild(buttonI);
                 }
             }
