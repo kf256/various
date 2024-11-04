@@ -30,7 +30,24 @@
 5982534904 2875546873 1159562863 8823537875 9375195778 
 1857780532 1712268066 1300192787 6611195909 2164201989`.replace(/ /g, "").replace(/\n/g, "");
 
-            textElm.innerHTML = pi;
+            const progress = 0;
+
+            textElm.onclick = start();
+
+            function start() {
+                const pos = progress+2;
+
+                let text = "";
+
+                if (pos <= 10) text += pi.slice(0, pos);
+                else text += "... " + pi.slice(pos-10, pos);
+
+                for (let i = 0; i < 20; i++) {
+                    text += '<span id="' + i + '"> </span>';
+                }
+
+                text += pi.slice(pos+20, pos+30) + " ...";
+            }
         </script>
     </body>
 </html>
