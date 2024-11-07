@@ -78,6 +78,9 @@
             
             let cursor;
             
+            const blockLength = 10;
+            const queriedBlocks = 2;
+            
             function start() {
                 document.getElementById("text").style.display = "";
                 document.getElementById("startButton").style.display = "none";
@@ -87,19 +90,17 @@
                 
                 let text = "";
                 
-                if (pos <= 10) text += pi.slice(0, pos);
-                else text += "... " + pi.slice(pos-10, pos);
+                if (pos <= blockLength) text += pi.slice(0, pos);
+                else text += "... " + pi.slice(pos-blockLength, pos);
                 
-                text += " ";
-                
-                for (let i = 0; i < 20; i++) {
-                    if (i === 10) text += " ";
+                for (let i = 0; i < blockLength*queriedBlocks; i++) {
+                    if (i%blockLength === 0) text += " ";
                     text += '<span id="' + i + '" style="outline: 1px solid gray;">&nbsp;</span>';
                 }
                 
                 text += " ";
                 
-                text += pi.slice(pos+20, pos+30) + " ...";
+                text += pi.slice(pos+blockLength*queriedBlocks, pos+blockLength*(queriedBlocks+1)) + " ...";
                 
                 textElm.innerHTML = text;
                 
@@ -108,7 +109,7 @@
             
             function input(button) {
                 if (typeof button === "number") {
-                    if (cursor === 20) return;
+                    if (cursor === blockLength*queriedBlocks) return;
                     document.getElementById(cursor).innerHTML = button;
                     cursor++;
                 } else if (button === "del") {
@@ -116,7 +117,7 @@
                     cursor--;
                     document.getElementById(cursor).innerHTML = "&nbsp;";
                 } else if (button === "enter") {
-                    if (cursor !== 20) return;
+                    if (cursor !== blockLength*queriedBlocks) return;
                     check();
                 }
             }
@@ -129,10 +130,10 @@
                 
                 const pos = progress+2;
                 
-                if (pos <= 10) solution += pi.slice(0, pos);
-                else solution += "... " + pi.slice(pos-10, pos);
+                if (pos <= blockLength) solution += pi.slice(0, pos);
+                else solution += "... " + pi.slice(pos-blockLength, pos);
                 
-                for (let i = 0; i < 30; i += 10) solution += " " + pi.slice(pos+i, pos+i+10);
+                for (let i = 0; i < blockLength*(queriedBlocks+1); i += blockLength) solution += " " + pi.slice(pos+i, pos+i+blockLength);
                 
                 solution += " ...";
                 
@@ -140,7 +141,7 @@
                 
                 let result = [];
                 
-                for (let i = 0; i < 20; i++) {
+                for (let i = 0; i < blockLength*queriedBlocks; i++) {
                     const elm = document.getElementById(i);
                     const correct = (elm.innerHTML === pi[pos+i]);
                     elm.style.backgroundColor = correct ? "green" : "red";
@@ -148,20 +149,20 @@
                 }
                 
                 let mistakes = 0;
-                for (let i = 0; i < 20; i++) {
+                for (let i = 0; i < blockLength*queriedBlocks; i++) {
                     if (!result[i]) mistakes ++;
                 }
-                console.log(100-mistakes*5+"% correct");
+                console.log(100-mistakes/blockLength/queriedBlocks*100+"% correct");
                 
-                let mistakeInFirst10 = false;
-                for (let i = 0; i < 10; i++) {
-                    if (!result[i]) mistakeInFirst10 = true;
+                let mistakeInFirstBlock = false;
+                for (let i = 0; i < blockLength; i++) {
+                    if (!result[i]) mistakeInFirstBlock = true;
                 }
                 
-                if (mistakeInFirst10) {
-                    if (progress > 0) progress -= 10;
+                if (mistakeInFirstBlock) {
+                    if (progress > 0) progress -= blockLength;
                 } else if (mistakes === 0) {
-                    progress += 10;
+                    progress += blockLength;
                 }
             }
         </script>
