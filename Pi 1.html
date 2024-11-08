@@ -75,12 +75,7 @@
             </tr>
         </table>
         <script>
-            document.getElementById("positionDisplay").style.display = "none";
-            document.getElementById("text").style.display = "none";
-            document.getElementById("input").style.display = "none";
-            document.getElementById("startButton").style.display = "none";
-            document.getElementById("settingsButton").style.display = "none";
-            document.getElementById("settings").style.display = "none";
+            hide("positionDisplay", "text", "input", "startButton", "settingsButton", "settings");
             
             const textElm = document.getElementById("text");
             
@@ -97,8 +92,7 @@
             
             async function main() {
                 await loadPi();
-                document.getElementById("startButton").style.display = "";
-                document.getElementById("settingsButton").style.display = "";
+                show("startButton", "settingsButton");
             }
             
             async function loadPi() {
@@ -107,10 +101,8 @@
             }
             
             function start() {
-                document.getElementById("positionDisplay").style.display = "";
-                document.getElementById("text").style.display = "";
-                document.getElementById("startButton").style.display = "none";
-                document.getElementById("input").style.display = "";
+                hide("startButton");
+                show("positionDisplay", "text", "input");
                 
                 document.getElementById("positionDisplay").innerHTML = "Position: "+progress;
                 
@@ -151,7 +143,7 @@
             }
             
             async function check() {
-                document.getElementById("input").style.display = "none";
+                hide("input");
                 
                 let solution = "";
                 
@@ -193,16 +185,13 @@
                     progress += blockLength;
                 }
                 
-                document.getElementById("startButton").style.display = "";
+                show("startButton");
             }
             
             function showSettings() {
-                document.getElementById("positionDisplay").style.display = "none";
-                document.getElementById("text").style.display = "none";
-                document.getElementById("input").style.display = "none";
-                document.getElementById("startButton").style.display = "none";
-                document.getElementById("settingsButton").style.display = "none";
-                document.getElementById("settings").style.display = "";
+                hide("positionDisplay", "text", "input", "startButton", "settingsButton");
+                
+                show("settings");
                 
                 document.getElementById("position").value = progress;
             }
@@ -227,9 +216,23 @@
                     progress = document.getElementById("position").value*1;
                 }
                 
-                document.getElementById("startButton").style.display = "";
-                document.getElementById("settingsButton").style.display = "";
-                document.getElementById("settings").style.display = "none";
+                hide("settings");
+                show("startButton", "settingsButton");
+            }
+            
+            function hide(...ids) {
+                for (let i = 0; i < ids.length; i++) {
+                    const elm = document.getElementById(ids[i]);
+                    if (elm !== null) elm.style.display = "none";
+                    else console.warn("no element with id "+ids[i]);
+                }
+            }
+            function show(...ids) {
+                for (let i = 0; i < ids.length; i++) {
+                    const elm = document.getElementById(ids[i]);
+                    if (elm !== null) elm.style.display = "";
+                    else console.warn("no element with id "+ids[i]);
+                }
             }
         </script>
     </body>
