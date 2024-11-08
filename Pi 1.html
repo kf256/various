@@ -11,8 +11,12 @@
                 font-size: 30px;
             }
             
-            #startButton {
+            button {
                 font-size: 50px;
+            }
+            
+            #settings, input {
+                font-size: 30px;
             }
             
             #input td {
@@ -28,7 +32,6 @@
             }
             
             #settingsButton {
-                font-size: 50px;
                 position: absolute;
                 right: 10px;
                 top: 10px;
@@ -42,6 +45,7 @@
         <div id="settings">
             <label for="position">Position:</label>
             <input id="position" type="number" min="0" oninput="updatePositionSetting()">
+            <br>
             <br>
             <button id="apply" onclick="apply()">Apply</button>
         </div>
