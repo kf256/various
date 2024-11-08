@@ -92,7 +92,8 @@
             
             async function main() {
                 await loadPi();
-                show("startButton", "settingsButton");
+                show("startButton", "settingsButton", "positionDisplay");
+                updatePositionDisplay();
             }
             
             async function loadPi() {
@@ -104,7 +105,7 @@
                 hide("startButton");
                 show("positionDisplay", "text", "input");
                 
-                document.getElementById("positionDisplay").innerHTML = "Position: "+progress;
+                updatePositionDisplay();
                 
                 const pos = progress+2;
                 
@@ -217,7 +218,13 @@
                 }
                 
                 hide("settings");
-                show("startButton", "settingsButton");
+                show("startButton", "settingsButton", "positionDisplay");
+                updatePositionDisplay();
+            }
+            
+            function updatePositionDisplay() {
+                const text = `Position ${progress+1} to ${progress+blockLength*queriedBlocks}`;
+                document.getElementById("positionDisplay").innerHTML = text;
             }
             
             function hide(...ids) {
