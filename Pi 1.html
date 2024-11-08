@@ -39,6 +39,7 @@
         </style>
     </head>
     <body>
+        <p id="positionDisplay"></p>
         <tt id="text"></tt>
         <br>
         <button id="settingsButton" onclick="showSettings()">⚙</button>
@@ -74,6 +75,7 @@
             </tr>
         </table>
         <script>
+            document.getElementById("positionDisplay").style.display = "none";
             document.getElementById("text").style.display = "none";
             document.getElementById("input").style.display = "none";
             document.getElementById("startButton").style.display = "none";
@@ -105,9 +107,12 @@
             }
             
             function start() {
+                document.getElementById("positionDisplay").style.display = "";
                 document.getElementById("text").style.display = "";
                 document.getElementById("startButton").style.display = "none";
                 document.getElementById("input").style.display = "";
+                
+                document.getElementById("positionDisplay").innerHTML = "Position: "+progress;
                 
                 const pos = progress+2;
                 
@@ -192,6 +197,7 @@
             }
             
             function showSettings() {
+                document.getElementById("positionDisplay").style.display = "none";
                 document.getElementById("text").style.display = "none";
                 document.getElementById("input").style.display = "none";
                 document.getElementById("startButton").style.display = "none";
