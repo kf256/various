@@ -19,6 +19,10 @@
                 font-size: 30px;
             }
             
+            #positionSetting {
+                width: 100px;
+            }
+            
             #input td {
                 width: 100px;
                 height: 100px;
@@ -44,8 +48,8 @@
         <br>
         <button id="settingsButton" onclick="showSettings()">⚙</button>
         <div id="settings">
-            <label for="position">Position:</label>
-            <input id="position" type="number" min="0" oninput="updatePositionSetting()">
+            <label for="positionSetting">Position:</label>
+            <input id="positionSetting" type="number" min="0" oninput="updatePositionSetting()">
             <br>
             <br>
             <button id="apply" onclick="apply()">Apply</button>
@@ -194,11 +198,12 @@
                 
                 show("settings");
                 
-                document.getElementById("position").value = progress;
+                document.getElementById("positionSetting").value = progress;
+                document.getElementById("positionSetting").focus();
             }
             
             function updatePositionSetting() {
-                const posElm = document.getElementById("position");
+                const posElm = document.getElementById("positionSetting");
                 const value = posElm.value*1;
                 
                 let valid = true;
@@ -214,7 +219,7 @@
             
             function apply() {
                 if (updatePositionSetting()) {
-                    progress = document.getElementById("position").value*1;
+                    progress = document.getElementById("positionSetting").value*1;
                 }
                 
                 hide("settings");
