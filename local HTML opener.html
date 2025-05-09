@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <input id="file" type="file"></input>
+        <script>
+            file.oninput = load;
+            
+            async function load() {
+                if (file.files.length === 0) return;
+                document.write(await file.files[0].text());
+            };
+        </script>
+    </body>
+</html>
